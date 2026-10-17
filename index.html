@@ -4,6 +4,17 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Treinô - Aluno</title>
+
+<!-- PWA -->
+<link rel="manifest" href="./manifest.json">
+<meta name="theme-color" content="#ff6a1a">
+<link rel="icon" type="image/png" href="./icon-192.png">
+<link rel="apple-touch-icon" href="./icon-192.png">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Treinô">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+
 <!-- Firebase SDK Compat -->
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
@@ -35,7 +46,6 @@ body {
   min-height: 100vh;
 }
 
-/* CARD COM EFEITO DE VIDRO FOSCO (GLASSMORPHISM) */
 .card {
   background: var(--card-bg);
   backdrop-filter: blur(20px);
@@ -47,7 +57,6 @@ body {
   box-shadow: 0 20px 40px rgba(0, 0, 0, 0.5);
 }
 
-/* TÍTULO E BONEQUINHO ANIMADO */
 h1 {
   font-size: 28px;
   margin: 0 0 24px;
@@ -88,7 +97,6 @@ label {
   font-weight: 500;
 }
 
-/* INPUTS TRANSLÚCIDOS E ARREDONDADOS */
 input {
   width: 100%;
   padding: 14px 16px;
@@ -107,11 +115,8 @@ input:focus {
   background: rgba(255, 255, 255, 0.1);
 }
 
-input::placeholder {
-  color: #64748b;
-}
+input::placeholder { color: #64748b; }
 
-/* BOTÃO MODERNO COM DEGRADÊ E SOMBRA NEON */
 .btn {
   width: 100%;
   margin-top: 24px;
@@ -132,6 +137,15 @@ input::placeholder {
   box-shadow: 0 4px 12px var(--pri-shadow);
 }
 
+.btn:disabled { opacity: 0.6; }
+
+.btn-sec {
+  background: var(--card-bg);
+  border: 1px solid var(--card-border);
+  box-shadow: none;
+  margin-top: 12px;
+}
+
 .mut {
   color: var(--mut);
   font-size: 13px;
@@ -148,17 +162,45 @@ input::placeholder {
     <h2>Entrar como Aluno</h2>
     <label>Telefone (com DDD)</label>
     <input id="lt" type="tel" inputmode="tel" placeholder="11999998888">
-    
-    <label>Senha (6 dígitos)</label>
-    <input id="ls" type="password" inputmode="numeric" maxlength="6" placeholder="••••••">
-    
-    <button class="btn" onclick="entrarAluno()">Entrar</button>
+
+    <label>Senha / PIN (4 a 6 números)</label>
+    <input id="ls" type="password" inputmode="numeric" maxlength="6" placeholder="••••">
+
+    <button class="btn" id="btnEntrar" onclick="entrarAluno()">Entrar</button>
+    <button class="btn btn-sec" id="btnInstalar" style="display:none" onclick="instalarApp()">📲 Instalar app no celular</button>
     <div class="mut">Não possui acesso? Fale com seu instrutor.</div>
   </div>
 </div>
 
 <script>
-// ===== CONFIGURAÇÃO DO SEU FIREBASE =====
+// ===== PWA: service worker + botão de instalar =====
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('./sw.js').catch(err => console.log('SW erro:', err));
+  });
+}
+
+let deferredPrompt = null;
+window.addEventListener('beforeinstallprompt', e => {
+  e.preventDefault();
+  deferredPrompt = e;
+  document.getElementById('btnInstalar').style.display = 'block';
+});
+window.addEventListener('appinstalled', () => {
+  deferredPrompt = null;
+  document.getElementById('btnInstalar').style.display = 'none';
+});
+
+function instalarApp() {
+  if (!deferredPrompt) {
+    alert("Para instalar: toque nos 3 pontinhos do Chrome e escolha 'Instalar app' ou 'Adicionar à tela inicial'.");
+    return;
+  }
+  deferredPrompt.prompt();
+  deferredPrompt.userChoice.then(() => { deferredPrompt = null; });
+}
+
+// ===== FIREBASE =====
 const CFG = {
   apiKey: "AIzaSyCsidHGMxmF_OGqxZGeweUS6UCF_OViIvc",
   authDomain: "treino-app-787d7.firebaseapp.com",
@@ -172,42 +214,53 @@ const db = firebase.firestore();
 
 const fone = t => String(t || "").replace(/\D/g, "").slice(-11);
 const em = ph => ph + "@academia.app";
-const pwAluno6 = (ph, pin) => "Tn@" + ph + "#" + pin + "#treino26";
+const pwAluno = (ph, pin) => "Tn@" + ph + "#" + pin + "#treino26";
 const $ = i => document.getElementById(i);
+
+// Se já estiver logado, valida a conta e vai direto pro painel
+auth.onAuthStateChanged(async u => {
+  if (!u) return;
+  try {
+    const snap = await db.doc("users/" + u.uid).get();
+    if (!snap.exists) {
+      alert("Cadastro não encontrado no sistema. Fale com seu instrutor.");
+      return auth.signOut();
+    }
+    const d = snap.data();
+    if (d.status && d.status !== "ativo") {
+      alert("Sua conta está " + d.status + ". Fale com seu instrutor.");
+      return auth.signOut();
+    }
+    if (d.role && d.role !== "aluno") {
+      alert("Esta conta não é de aluno.");
+      return auth.signOut();
+    }
+    window.location.replace("./aluno.html");
+  } catch (e) {
+    console.log(e);
+    $("btnEntrar").disabled = false;
+    $("btnEntrar").textContent = "Entrar";
+    alert("Não foi possível carregar seu cadastro. Verifique a internet e tente de novo.");
+  }
+});
 
 async function entrarAluno() {
   const ph = fone($("lt").value);
-  const senha = $("ls").value;
+  const senha = $("ls").value.trim();
 
   if (ph.length < 10) return alert("Digite o telefone com DDD válido.");
-  if (!/^\d{6}$/.test(senha)) return alert("A senha precisa ter exatamente 6 números.");
+  if (!/^\d{4,6}$/.test(senha)) return alert("A senha precisa ter de 4 a 6 números.");
+
+  const btn = $("btnEntrar");
+  btn.disabled = true;
+  btn.textContent = "Entrando...";
 
   try {
-    await auth.signInWithEmailAndPassword(em(ph), pwAluno6(ph, senha));
-    
-    const userDoc = await db.doc("users/" + auth.currentUser.uid).get();
-    if (!userDoc.exists) {
-      alert("Cadastro não encontrado no sistema. Fale com seu instrutor.");
-      auth.signOut();
-      return;
-    }
-    
-    const userData = userDoc.data();
-    if (userData.status !== "ativo") {
-      alert("Sua conta está " + (userData.status || "bloqueada") + ". Fale com seu instrutor.");
-      auth.signOut();
-      return;
-    }
-
-    if (userData.role !== "aluno") {
-      alert("Esta conta não é de aluno.");
-      auth.signOut();
-      return;
-    }
-
-    alert("Login realizado com sucesso! Redirecionando...");
-    window.location.href = "aluno.html";
+    await auth.signInWithEmailAndPassword(em(ph), pwAluno(ph, senha));
+    // o onAuthStateChanged acima faz a validação e o redirecionamento
   } catch (e) {
+    btn.disabled = false;
+    btn.textContent = "Entrar";
     alert("Telefone ou senha incorretos. Verifique os dados.");
   }
 }
