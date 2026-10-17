@@ -1,36 +1,71 @@
-const C = 'treino-aluno-v3';
-const P = [
+const CACHE = 'treino-aluno-v4';
+
+const FIREBASE_LIBS = [
   'https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js',
   'https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js',
   'https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js'
 ];
 
-self.addEventListener('install', e => {
+const LOCAL_FILES = [
+  './',
+  './index.html',
+  './aluno.html',
+  './manifest.json',
+  './icon-192.png',
+  './icon-512.png'
+];
+
+self.addEventListener('install', event => {
   self.skipWaiting();
-  e.waitUntil(
-    caches.open(C).then(c => 
+  event.waitUntil(
+    caches.open(CACHE).then(cache =>
       Promise.all([
-        ...P.map(u => fetch(u, { mode: 'no-cors' }).then(r => c.put(u, r)).catch(() => {})),
-        c.addAll(['./', 'aluno.html', 'manifest.json', 'icon-192.png', 'icon-512.png']).catch(() => {})
+        ...FIREBASE_LIBS.map(url =>
+          fetch(url, { mode: 'no-cors' })
+            .then(res => cache.put(url, res))
+            .catch(() => {})
+        ),
+        ...LOCAL_FILES.map(url => cache.add(url).catch(() => {}))
       ])
     )
   );
 });
 
-self.addEventListener('activate', e => e.waitUntil(clients.claim()));
+self.addEventListener('activate', event => {
+  event.waitUntil(
+    caches.keys()
+      .then(keys => Promise.all(keys.filter(k => k !== CACHE).map(k => caches.delete(k))))
+      .then(() => self.clients.claim())
+  );
+});
 
-self.addEventListener('fetch', e => {
-  const r = e.request, u = new URL(r.url);
-  if (r.method !== 'GET') return;
-  if (u.origin === location.origin) {
-    e.respondWith(
-      fetch(r).then(x => {
-        const k = x.clone();
-        caches.open(C).then(c => c.put(r, k));
-        return x;
-      }).catch(() => caches.match(r).then(m => m || caches.match('aluno.html')))
+self.addEventListener('fetch', event => {
+  const req = event.request;
+  if (req.method !== 'GET') return;
+
+  const url = new URL(req.url);
+
+  // Arquivos do próprio site: tenta rede, cai pro cache se estiver offline
+  if (url.origin === self.location.origin) {
+    event.respondWith(
+      fetch(req)
+        .then(res => {
+          if (res && res.ok) {
+            const copy = res.clone();
+            caches.open(CACHE).then(c => c.put(req, copy));
+          }
+          return res;
+        })
+        .catch(() =>
+          caches.match(req).then(m => m || caches.match('./index.html'))
+        )
     );
-  } else {
-    e.respondWith(caches.match(r).then(m => m || fetch(r)));
+    return;
+  }
+
+  // Só as bibliotecas do Firebase (gstatic) usam cache.
+  // Firestore, Auth e qualquer outro domínio vão direto pela rede.
+  if (url.hostname === 'www.gstatic.com') {
+    event.respondWith(caches.match(req).then(m => m || fetch(req)));
   }
 });
