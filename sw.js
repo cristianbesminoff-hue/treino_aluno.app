@@ -1,4 +1,4 @@
-const C = 'treino-aluno-v2';
+const C = 'treino-aluno-v3';
 const P = [
   'https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js',
   'https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js',
