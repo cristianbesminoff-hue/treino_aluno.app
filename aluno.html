@@ -8,8 +8,11 @@
 <!-- PWA Manifest & Theme -->
 <link rel="manifest" href="./manifest.json">
 <meta name="theme-color" content="#ff6a1a">
+<link rel="icon" type="image/png" href="./icon-192.png">
+<link rel="apple-touch-icon" href="./icon-192.png">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Treinô">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 
 <!-- Firebase SDK Compat -->
@@ -54,11 +57,7 @@ h1 {
   font-weight: 800;
 }
 
-nav {
-  display: flex;
-  gap: 8px;
-  margin-bottom: 16px;
-}
+nav { display: flex; gap: 8px; margin-bottom: 16px; }
 
 nav button {
   flex: 1;
@@ -158,15 +157,6 @@ input:focus, select:focus {
 
 .item:last-child { border-bottom: 0; }
 
-.tag {
-  font-size: 11px;
-  padding: 3px 8px;
-  border-radius: 12px;
-  font-weight: 700;
-  text-transform: uppercase;
-  color: #fff;
-}
-
 .check-box {
   width: 24px;
   height: 24px;
@@ -177,19 +167,23 @@ input:focus, select:focus {
 </head>
 <body>
 
-<div id="app"></div>
+<div id="app"><div class="card" style="margin-top:15vh; text-align:center;"><p class="mut">Carregando...</p></div></div>
 
 <script>
+// ===== PWA =====
 if ('serviceWorker' in navigator) {
-  navigator.serviceWorker.register('sw.js').catch(err => console.log('SW erro: ', err));
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('./sw.js').catch(err => console.log('SW erro: ', err));
+  });
 }
 
-let deferredPrompt;
-window.addEventListener('beforeinstallprompt', (e) => {
+let deferredPrompt = null;
+window.addEventListener('beforeinstallprompt', e => {
   e.preventDefault();
   deferredPrompt = e;
 });
 
+// ===== FIREBASE =====
 const CFG = {
   apiKey: "AIzaSyCsidHGMxmF_OGqxZGeweUS6UCF_OViIvc",
   authDomain: "treino-app-787d7.firebaseapp.com",
@@ -212,33 +206,60 @@ const pwAluno = (ph, pin) => "Tn@" + ph + "#" + pin + "#treino26";
 
 auth.onAuthStateChanged(async u => {
   if (!u) { renderLogin(); return; }
-  const s = await db.doc("users/" + u.uid).get();
-  if (!s.exists) { auth.signOut(); return; }
-  ME = { id: u.uid, ...s.data() };
-  
-  const [pSnap, lSnap] = await Promise.all([
-    db.doc("plans/main").get(),
-    db.doc("logs/" + ME.id + "_" + today()).get()
-  ]);
-  
-  PLAN = pSnap.data() || {};
-  if (lSnap.exists) LOG = lSnap.data();
-  
-  renderApp();
+
+  try {
+    const s = await db.doc("users/" + u.uid).get();
+    if (!s.exists) {
+      alert("Cadastro não encontrado no sistema. Fale com seu instrutor.");
+      auth.signOut();
+      return;
+    }
+
+    ME = { id: u.uid, ...s.data() };
+
+    if (ME.status && ME.status !== "ativo") {
+      alert("Sua conta está " + ME.status + ". Fale com seu instrutor.");
+      auth.signOut();
+      return;
+    }
+
+    const [pSnap, lSnap] = await Promise.all([
+      db.doc("plans/main").get(),
+      db.doc("logs/" + ME.id + "_" + today()).get()
+    ]);
+
+    PLAN = pSnap.data() || {};
+    LOG = { done: [], loads: {} };
+    if (lSnap.exists) {
+      const d = lSnap.data();
+      LOG.done = Array.isArray(d.done) ? d.done : [];
+      LOG.loads = d.loads || {};
+    }
+
+    renderApp();
+  } catch (e) {
+    console.log(e);
+    $("app").innerHTML = `
+      <div class="card" style="margin-top:15vh; text-align:center;">
+        <h2>Sem conexão</h2>
+        <p class="mut">Não foi possível carregar seus dados. Verifique a internet.</p>
+        <button class="btn" onclick="location.reload()">Tentar de novo</button>
+      </div>`;
+  }
 });
 
 function renderLogin() {
   $("app").innerHTML = `
     <div class="card" style="margin-top:15vh; text-align:center;">
-      <h1>🏋️ Treinô</h1>
+      <h1 style="justify-content:center;">🏋️ Treinô</h1>
       <p class="mut">Área do Aluno</p>
-      
-      <label>Telefone (com DDD)</label>
+
+      <label style="text-align:left;">Telefone (com DDD)</label>
       <input id="lphone" type="tel" placeholder="11999998888" inputmode="tel">
-      
-      <label>PIN de 4 números</label>
-      <input id="lpin" type="password" maxlength="4" inputmode="numeric" placeholder="••••">
-      
+
+      <label style="text-align:left;">Senha / PIN (4 a 6 números)</label>
+      <input id="lpin" type="password" maxlength="6" inputmode="numeric" placeholder="••••">
+
       <button class="btn" onclick="fazerLogin()">Entrar no Treino</button>
     </div>
   `;
@@ -246,12 +267,12 @@ function renderLogin() {
 
 async function fazerLogin() {
   const ph = fone($("lphone").value), pin = $("lpin").value.trim();
-  if (ph.length < 10 || !/^\d{4}$/.test(pin)) return alert("Insira o telefone correto e o PIN de 4 números.");
+  if (ph.length < 10 || !/^\d{4,6}$/.test(pin)) return alert("Insira o telefone correto e a senha de 4 a 6 números.");
 
   try {
     await auth.signInWithEmailAndPassword(em(ph), pwAluno(ph, pin));
   } catch (e) {
-    alert("Telefone ou PIN incorretos.");
+    alert("Telefone ou senha incorretos.");
   }
 }
 
@@ -266,7 +287,7 @@ async function renderApp() {
     <nav>${T.map(t => `<button class="${t[0] === tab ? "on" : ""}" onclick="tab='${t[0]}';renderApp()">${t[1]}</button>`).join("")}</nav>
     <div id="v"></div>
   `;
-  
+
   if (tab === "tr") vTreinoAluno();
   else vPerfilAluno();
 }
@@ -284,7 +305,7 @@ async function vTreinoAluno() {
     </div>
 
     <div class="card">
-      <h2>Treino ${tAtual}</h2>
+      <h2>Treino ${esc(tAtual)}</h2>
       ${exercicios.length ? exercicios.map(e => {
         const feito = LOG.done.includes(e.id);
         const carga = LOG.loads[e.id] || "";
@@ -293,12 +314,12 @@ async function vTreinoAluno() {
             <div style="display:flex; width:100%; justify-content:space-between; align-items:center;">
               <div>
                 <b>${esc(e.n)}</b>
-                <div class="mut">${esc(e.g)} ·${esc(e.s)}x${esc(e.r)}${e.gif ? ' · <a href="' + esc(e.gif) + '" target="_blank" style="color:var(--pri)">GIF</a>' : ''}</div>
+                <div class="mut">${esc(e.g)} · ${esc(e.s)}x${esc(e.r)}${e.gif ? ' · <a href="' + esc(e.gif) + '" target="_blank" rel="noopener" style="color:var(--pri)">GIF</a>' : ''}</div>
               </div>
-              <input type="checkbox" class="check-box" ${feito ? "checked" : ""} onclick="toggleEx('${e.id}')">
+              <input type="checkbox" class="check-box" style="width:24px;" ${feito ? "checked" : ""} onclick="toggleEx('${esc(e.id)}')">
             </div>
             <div style="width:100%; margin-top:8px; display:flex; gap:8px; align-items:center;">
-              <input type="text" placeholder="Carga (ex: 20kg)" value="${esc(carga)}" onchange="salvarCarga('${e.id}', this.value)" style="padding:8px 10px; font-size:13px;">
+              <input type="text" placeholder="Carga (ex: 20kg)" value="${esc(carga)}" onchange="salvarCarga('${esc(e.id)}', this.value)" style="padding:8px 10px; font-size:13px;">
             </div>
           </div>
         `;
@@ -309,8 +330,8 @@ async function vTreinoAluno() {
 
 async function mudarTreino(t) {
   ME.hoje = t;
-  await db.doc("users/" + ME.id).update({ hoje: t });
   renderApp();
+  try { await db.doc("users/" + ME.id).update({ hoje: t }); } catch (e) { console.log(e); }
 }
 
 async function toggleEx(id) {
@@ -319,8 +340,8 @@ async function toggleEx(id) {
   } else {
     LOG.done.push(id);
   }
-  await salvarLogFirebase();
   renderApp();
+  await salvarLogFirebase();
 }
 
 async function salvarCarga(id, val) {
@@ -331,12 +352,17 @@ async function salvarCarga(id, val) {
 
 async function salvarLogFirebase() {
   const idLog = ME.id + "_" + today();
-  await db.doc("logs/" + idLog).set({
-    uid: ME.id,
-    date: today(),
-    done: LOG.done,
-    loads: LOG.loads
-  }, { merge: true });
+  try {
+    await db.doc("logs/" + idLog).set({
+      uid: ME.id,
+      date: today(),
+      done: LOG.done,
+      loads: LOG.loads
+    }, { merge: true });
+  } catch (e) {
+    console.log(e);
+    alert("Não foi possível salvar. Verifique a internet.");
+  }
 }
 
 function vPerfilAluno() {
@@ -344,25 +370,25 @@ function vPerfilAluno() {
     <div class="card">
       <h2>Meus Dados & Metas</h2>
       <label>Peso Atual (kg)</label>
-      <input id="p-peso" type="number" value="${ME.peso || ""}">
-      
+      <input id="p-peso" type="number" step="0.1" value="${esc(ME.peso || "")}">
+
       <label>Altura (cm)</label>
-      <input id="p-alt" type="number" value="${ME.alt || ""}">
-      
+      <input id="p-alt" type="number" value="${esc(ME.alt || "")}">
+
       <label>Idade</label>
-      <input id="p-idade" type="number" value="${ME.idade || ""}">
-      
+      <input id="p-idade" type="number" value="${esc(ME.idade || "")}">
+
       <label>Objetivo</label>
       <select id="p-obj">
         <option value="perder" ${ME.obj === 'perder' ? 'selected' : ''}>Perder Peso / Definir</option>
         <option value="ganhar" ${ME.obj === 'ganhar' ? 'selected' : ''}>Ganhar Massa Muscular</option>
       </select>
-      
+
       <label>Dias de treino por semana</label>
-      <input id="p-dias" type="number" value="${ME.dias || "4"}">
-      
+      <input id="p-dias" type="number" value="${esc(ME.dias || "4")}">
+
       <button class="btn" onclick="salvarPerfil()">Salvar Perfil</button>
-      <button class="btn" style="background:var(--card-bg); border:1px solid var(--card-border); margin-top:10px;" onclick="instalarAppPWA()">📲 Instalar App no Telemóvel</button>
+      <button class="btn" style="background:var(--card-bg); border:1px solid var(--card-border); margin-top:10px; box-shadow:none;" onclick="instalarAppPWA()">📲 Instalar App no Celular</button>
     </div>
   `;
 }
@@ -372,32 +398,30 @@ async function salvarPerfil() {
   const alt = parseInt($("p-alt").value);
   const idade = parseInt($("p-idade").value);
   const obj = $("p-obj").value;
-  const dias = parseInt($("p-dias").value);
+  const dias = parseInt($("p-dias").value) || 4;
 
   if (!peso || !alt || !idade) return alert("Preencha todos os campos corretamente.");
 
-  ME.peso = peso;
-  ME.alt = alt;
-  ME.idade = idade;
-  ME.obj = obj;
-  ME.dias = dias;
-
-  await db.doc("users/" + ME.id).update({ peso, alt, idade, obj, dias });
-  alert("Perfil atualizado com sucesso!");
-  renderApp();
+  try {
+    await db.doc("users/" + ME.id).update({ peso, alt, idade, obj, dias });
+    ME.peso = peso; ME.alt = alt; ME.idade = idade; ME.obj = obj; ME.dias = dias;
+    alert("Perfil atualizado com sucesso!");
+    renderApp();
+  } catch (e) {
+    console.log(e);
+    alert("Não foi possível salvar o perfil.");
+  }
 }
 
 function instalarAppPWA() {
+  if (window.matchMedia('(display-mode: standalone)').matches) {
+    return alert("O app já está instalado e aberto como aplicativo.");
+  }
   if (deferredPrompt) {
     deferredPrompt.prompt();
-    deferredPrompt.userChoice.then((choiceResult) => {
-      if (choiceResult.outcome === 'accepted') {
-        console.log('Utilizador aceitou instalar');
-      }
-      deferredPrompt = null;
-    });
+    deferredPrompt.userChoice.then(() => { deferredPrompt = null; });
   } else {
-    alert("Para instalar, toca nos 3 pontos do Chrome e escolhe 'Adicionar ao ecrã principal' ou 'Instalar aplicação'.");
+    alert("Para instalar, toque nos 3 pontinhos do Chrome e escolha 'Instalar app' ou 'Adicionar à tela inicial'.");
   }
 }
 </script>
