@@ -3,11 +3,12 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>Treinô - Aluno</title>
+<title>Treinô - Painel do Aluno</title>
 
 <!-- PWA Manifest & Theme -->
 <link rel="manifest" href="manifest.json">
 <meta name="theme-color" content="#ff6a1a">
+<meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 
@@ -38,12 +39,11 @@ body {
   background: var(--bg);
   color: var(--tx);
   font: 16px/1.4 system-ui, -apple-system, sans-serif;
-  max-width: 600px;
+  max-width: 550px;
   padding: 16px 16px 60px;
   min-height: 100vh;
 }
 
-/* NAVEGAÇÃO E CABEÇALHO */
 h1 {
   font-size: 22px;
   margin: 8px 0 16px;
@@ -82,7 +82,6 @@ nav button.on {
   box-shadow: 0 4px 14px var(--pri-shadow);
 }
 
-/* CARDS GLASSMORPHISM */
 .card {
   background: var(--card-bg);
   backdrop-filter: blur(20px);
@@ -148,7 +147,6 @@ input:focus, select:focus {
 
 .mut { color: var(--mut); font-size: 13px; }
 
-/* ITENS E EXERCÍCIOS */
 .item {
   display: flex;
   justify-content: space-between;
@@ -160,47 +158,21 @@ input:focus, select:focus {
 
 .item:last-child { border-bottom: 0; }
 
-.ex {
-  display: block;
-  border-left: 4px solid var(--no);
-  margin-bottom: 10px;
-  background: rgba(255, 255, 255, 0.03);
+.tag {
+  font-size: 11px;
+  padding: 3px 8px;
   border-radius: 12px;
-  padding: 12px;
-}
-
-.ex.ok { border-left-color: var(--ok); }
-.ex img { width: 100%; border-radius: 10px; margin: 8px 0; }
-
-.chk {
-  border: 1px solid var(--no);
-  color: var(--no);
-  background: rgba(239, 68, 68, 0.1);
-  border-radius: 10px;
-  padding: 8px 14px;
   font-weight: 700;
-  cursor: pointer;
-  white-space: nowrap;
-}
-
-.ex.ok .chk {
-  background: var(--ok);
-  border-color: var(--ok);
+  text-transform: uppercase;
   color: #fff;
 }
 
-.x { background: none; border: 0; color: var(--mut); font-size: 18px; cursor: pointer; }
-
-/* METAS E MACROS */
-.grid {
-  display: grid;
-  grid-template-columns: repeat(4, 1fr);
-  gap: 8px;
-  text-align: center;
-  margin: 10px 0;
+.check-box {
+  width: 24px;
+  height: 24px;
+  accent-color: var(--pri);
+  cursor: pointer;
 }
-
-.grid b { display: block; font-size: 18px; color: var(--pri); font-weight: 800; }
 </style>
 </head>
 <body>
@@ -208,12 +180,10 @@ input:focus, select:focus {
 <div id="app"></div>
 
 <script>
-// Registo do Service Worker para PWA
 if ('serviceWorker' in navigator) {
   navigator.serviceWorker.register('sw.js').catch(err => console.log('SW erro: ', err));
 }
 
-// ===== CONFIGURAÇÃO DO SEU FIREBASE =====
 const CFG = {
   apiKey: "AIzaSyCsidHGMxmF_OGqxZGeweUS6UCF_OViIvc",
   authDomain: "treino-app-787d7.firebaseapp.com",
@@ -224,148 +194,190 @@ const CFG = {
 firebase.initializeApp(CFG);
 const auth = firebase.auth();
 const db = firebase.firestore();
-let ME = null;
+
+let ME = null, PLAN = {}, LOG = { done: [], loads: {} }, tab = "tr";
 
 const $ = i => document.getElementById(i);
 const today = (d = new Date()) => new Date(d.getTime() - d.getTimezoneOffset() * 6e4).toISOString().slice(0, 10);
 const esc = t => String(t == null ? "" : t).replace(/[&<>"]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
+const fone = t => String(t || "").replace(/\D/g, "").slice(-11);
+const em = ph => ph + "@academia.app";
+const pwAluno = (ph, pin) => "Tn@" + ph + "#" + pin + "#treino26";
 
-const FOODS = "Arroz branco cozido,128,2.5,28;Arroz integral cozido,124,2.6,26;Feijão carioca cozido,76,4.8,13.6;Feijão preto cozido,77,4.5,14;Lentilha cozida,93,6.3,16;Grão-de-bico cozido,130,7,22;Macarrão cozido,102,3.4,21;Batata inglesa cozida,52,1.2,12;Batata doce cozida,77,0.6,18;Mandioca cozida,125,0.6,30;Inhame cozido,97,2.1,23;Pão francês,300,8,58;Pão de forma integral,253,9,49;Tapioca (goma),240,0,60;Cuscuz de milho,113,2.2,25;Aveia em flocos,394,13.9,67;Granola,420,9,65;Frango peito grelhado,159,32,0;Frango coxa assada,215,26,0;Carne bovina patinho,219,35.9,0;Carne moída refogada,212,26,0;Alcatra grelhada,241,31,0;Fígado bovino grelhado,225,29,4;Carne suína lombo,210,30,0;Tilápia grelhada,128,26,0;Salmão grelhado,230,24,0;Atum em lata (água),116,26,0;Sardinha em lata,208,24,0;Ovo cozido,146,13.3,0.6;Clara de ovo cozida,59,13,0;Leite integral,61,3.2,4.6;Leite desnatado,35,3.4,5;Iogurte natural,51,4.1,1.9;Iogurte grego,97,9,4;Queijo minas frescal,264,17,3;Queijo mussarela,330,22,3;Requeijão light,200,10,4;Whey protein,400,80,8;Banana prata,98,1.3,26;Maçã,56,0.3,15;Laranja,37,1,9;Mamão,40,0.5,10;Melancia,33,0.9,8;Abacaxi,48,0.9,12;Manga,64,0.4,17;Morango,30,0.9,7;Uva,53,0.7,14;Abacate,96,1.2,6;Brócolis cozido,25,2.1,4.4;Couve refogada,90,1.7,8.7;Cenoura cozida,30,0.8,6.7;Tomate,15,1.1,3.1;Alface,11,1.3,1.7;Pepino,10,0.9,2;Abobrinha cozida,15,1,3;Beterraba cozida,32,1.3,7.2;Amendoim,544,27,20;Castanha-do-pará,643,14,15;Amêndoas,579,21,22;Pasta de amendoim,588,25,20;Azeite de oliva,884,0,0;Manteiga,726,0.4,0;Chocolate amargo 70%,540,7,46;Mel,309,0.4,84".split(";").map(s => { const a = s.split(","); return { n: a[0], k: +a[1], p: +a[2], c: +a[3] } });
-
-function calc(u) {
-  const tmb = 10 * u.peso + 6.25 * u.alt - 5 * u.idade + (u.sexo === "m" ? 5 : -161);
-  let k = tmb * (+u.freq || 1.55) + (u.obj === "ganhar" ? 400 : -500); if (u.plus) k *= 1.2; k = Math.round(k);
-  const p = Math.round(u.peso * (u.obj === "ganhar" ? 2 : 1.8)), g = Math.round(k * .25 / 9);
-  return { k, p, g, c: Math.max(0, Math.round((k - p * 4 - g * 9) / 4)) }
-}
-
-function sair() { auth.signOut().then(() => window.location.href = "index.html"); }
-function saveUser(o) { Object.assign(ME, o); return db.doc("users/" + ME.uid).update(o) }
-
-function boot(role, main) {
-  auth.onAuthStateChanged(async u => {
-    if (!u) { window.location.href = "index.html"; return; }
-    const s = await db.doc("users/" + u.uid).get();
-    if (!s.exists) { alert("Acesso não encontrado."); return auth.signOut() }
-    ME = { uid: u.uid, ...s.data() };
-    const st = ME.status || "ativo";
-    if (st !== "ativo") { alert(st === "pausado" ? "Seu acesso está pausado." : "Seu acesso está bloqueado."); return auth.signOut() }
-    if (ME.role !== role) { $("app").innerHTML = '<div class="card">Sem permissão.<button class="btn" onclick="sair()">Sair</button></div>'; return }
-    main();
-  })
-}
-
-// ===== LÓGICA DO ALUNO =====
-let PLAN = {}, LOG = { done: [], loads: {} }, HIST = [], tab = "tr", tm = null;
-
-boot("aluno", async () => {
-  PLAN = (await db.doc("plans/main").get()).data() || {};
-  const l = await db.doc("logs/" + ME.uid + "_" + today()).get();
-  if (l.exists) LOG = { done: [], loads: {}, ...l.data() };
-  tab = ME.peso ? "tr" : "pf";
-  render();
+auth.onAuthStateChanged(async u => {
+  if (!u) { renderLogin(); return; }
+  const s = await db.doc("users/" + u.uid).get();
+  if (!s.exists) { auth.signOut(); return; }
+  ME = { id: u.uid, ...s.data() };
+  
+  const [pSnap, lSnap] = await Promise.all([
+    db.doc("plans/main").get(),
+    db.doc("logs/" + ME.id + "_" + today()).get()
+  ]);
+  
+  PLAN = pSnap.data() || {};
+  if (lSnap.exists) LOG = lSnap.data();
+  
+  renderApp();
 });
 
-const saveLog = () => db.doc("logs/" + ME.uid + "_" + today()).set({ ...LOG, uid: ME.uid, nome: ME.nome, date: today() });
-
-function render() {
-  const T = [["tr", "Treino"], ["di", "Dieta"], ["pg", "Progresso"], ["pf", "Perfil"]];
-  $("app").innerHTML = `<h1><span>🏋️ ${esc(ME.nome)}</span><button class="lnk" onclick="sair()">Sair</button></h1><nav>${T.map(t => `<button class="${t[0] === tab ? "on" : ""}" onclick="tab='${t[0]}';render()">${t[1]}</button>`).join("")}</nav>` +
-    ({ tr: vTreino, di: vDieta, pg: vProg, pf: vPerfil })[tab]();
-  if (tab === "pg") loadHist();
+function renderLogin() {
+  $("app").innerHTML = `
+    <div class="card" style="margin-top:15vh; text-align:center;">
+      <h1>🏋️ Treinô</h1>
+      <p class="mut">Área do Aluno</p>
+      
+      <label>Telefone (com DDD)</label>
+      <input id="lphone" type="tel" placeholder="11999998888" inputmode="tel">
+      
+      <label>PIN de 4 números</label>
+      <input id="lpin" type="password" maxlength="4" inputmode="numeric" placeholder="••••">
+      
+      <button class="btn" onclick="fazerLogin()">Entrar no Treino</button>
+    </div>
+  `;
 }
 
-function vPerfil() {
-  const u = ME;
-  return `<div class="card"><h2>Seus dados de Perfil</h2><div class="row"><div><label>Peso (kg)</label><input id="pe" type="number" value="${u.peso || ""}"></div><div><label>Altura (cm)</label><input id="al" type="number" value="${u.alt || ""}"></div></div><div class="row"><div><label>Idade</label><input id="id" type="number" value="${u.idade || ""}"></div><div><label>Sexo</label><select id="sx"><option value="m" ${u.sexo === "f" ? "" : "selected"}>Masculino</option><option value="f" ${u.sexo === "f" ? "selected" : ""}>Feminino</option></select></div></div><label>Objetivo</label><select id="ob"><option value="ganhar" ${u.obj === "perder" ? "" : "selected"}>Ganhar massa</option><option value="perder" ${u.obj === "perder" ? "selected" : ""}>Perder peso</option></select><button class="btn" onclick="salvaPf()">Salvar e Calcular Metas</button></div>`;
+async function fazerLogin() {
+  const ph = fone($("lphone").value), pin = $("lpin").value.trim();
+  if (ph.length < 10 || !/^\d{4}$/.test(pin)) return alert("Insira o telefone correto e o PIN de 4 números.");
+
+  try {
+    await auth.signInWithEmailAndPassword(em(ph), pwAluno(ph, pin));
+  } catch (e) {
+    alert("Telefone ou PIN incorretos.");
+  }
 }
 
-async function salvaPf() {
-  const w = +$("pe").value, h = +$("al").value, i = +$("id").value;
-  if (!w || !h || !i) return alert("Preencha peso, altura e idade.");
-  await saveUser({ peso: w, alt: h, idade: i, sexo: $("sx").value, obj: $("ob").value });
-  tab = "tr";
-  render();
+function sair() {
+  auth.signOut();
 }
 
-function vTreino() {
-  if (!ME.peso) return vPerfil();
-  const names = Object.keys(PLAN).filter(k => (PLAN[k] || []).length).sort();
-  if (!names.length) return '<div class="card mut">O seu instrutor ainda não cadastrou o seu treino.</div>';
-  const d = Math.min(ME.dias || names.length, names.length), use = names.slice(0, d), hoje = use.includes(ME.hoje) ? ME.hoje : use[0];
-  return `<div class="card"><label>Dias de treino por semana</label><select onchange="saveUser({dias:+this.value}).then(render)">${[2, 3, 4, 5].filter(n => n <= names.length).map(n => `<option ${n === d ? "selected" : ""}>${n}</option>`).join("") || "<option>" + d + "</option>"}</select><label>Treino de hoje</label><select onchange="saveUser({hoje:this.value}).then(render)">${use.map(n => `<option ${n === hoje ? "selected" : ""}>${esc(n)}</option>`).join("")}</select><button class="btn" id="rest" onclick="rest()">⏱ Descanso 60s</button></div>
- <div class="card"><h2>Treino ${esc(hoje)}</h2>${PLAN[hoje].map(e => {
-    const ok = LOG.done.includes(e.id);
-    return `<div class="item ex ${ok ? "ok" : ""}"><div style="width:100%"><b style="font-size:16px;">${esc(e.n)}</b><div class="mut">${esc(e.g)} ·${esc(e.s)}x${esc(e.r)}</div>${e.gif ? `<img src="${esc(e.gif)}" loading="lazy" alt="${esc(e.n)}">` : ""}<div class="row" style="align-items:center;margin-top:10px;"><input type="number" inputmode="decimal" placeholder="Carga (kg)" value="${LOG.loads[e.id] \vert{}\vert{} ""}" onchange="LOG.loads['${e.id}']=this.value;saveLog()"><button class="chk" onclick="fez('${e.id}')">${ok ? "✓ Feito" : "Fazer"}</button></div></div></div>`;
-  }).join("")}</div>`;
+async function renderApp() {
+  const T = [["tr", "Treino"], ["per", "Meu Perfil"]];
+  $("app").innerHTML = `
+    <h1><span>🔥 ${esc(ME.nome)}</span><button class="lnk" onclick="sair()">Sair</button></h1>
+    <nav>${T.map(t => `<button class="${t[0] === tab ? "on" : ""}" onclick="tab='${t[0]}';renderApp()">${t[1]}</button>`).join("")}</nav>
+    <div id="v"></div>
+  `;
+  
+  if (tab === "tr") vTreinoAluno();
+  else vPerfilAluno();
 }
 
-function fez(id) {
-  const i = LOG.done.indexOf(id);
-  i < 0 ? LOG.done.push(id) : LOG.done.splice(i, 1);
-  saveLog();
-  render();
+async function vTreinoAluno() {
+  const tAtual = ME.hoje || "A";
+  const exercicios = PLAN[tAtual] || [];
+
+  $("v").innerHTML = `
+    <div class="card">
+      <h2>Escolher Treino do Dia</h2>
+      <div class="row">
+        ${["A", "B", "C", "D", "E"].map(x => `<button class="btn" style="margin-top:0; background:${x === tAtual ? 'var(--pri-gradient)' : 'var(--card-bg)'}; border:1px solid var(--card-border);" onclick="mudarTreino('${x}')">${x}</button>`).join("")}
+      </div>
+    </div>
+
+    <div class="card">
+      <h2>Treino ${tAtual}</h2>
+      ${exercicios.length ? exercicios.map(e => {
+        const feito = LOG.done.includes(e.id);
+        const carga = LOG.loads[e.id] || "";
+        return `
+          <div class="item" style="flex-direction:column; align-items:flex-start;">
+            <div style="display:flex; width:100%; justify-content:space-between; align-items:center;">
+              <div>
+                <b>${esc(e.n)}</b>
+                <div class="mut">${esc(e.g)} ·${esc(e.s)}x${esc(e.r)}${e.gif ? ' · <a href="' + esc(e.gif) + '" target="_blank" style="color:var(--pri)">GIF</a>' : ''}</div>
+              </div>
+              <input type="checkbox" class="check-box" ${feito ? "checked" : ""} onclick="toggleEx('${e.id}')">
+            </div>
+            <div style="width:100%; margin-top:8px; display:flex; gap:8px; align-items:center;">
+              <input type="text" placeholder="Carga (ex: 20kg)" value="${esc(carga)}" onchange="salvarCarga('${e.id}', this.value)" style="padding:8px 10px; font-size:13px;">
+            </div>
+          </div>
+        `;
+      }).join("") : '<div class="mut">Nenhum exercício cadastrado para este treino ainda.</div>'}
+    </div>
+  `;
 }
 
-function rest() {
-  clearInterval(tm);
-  let s = 60;
-  const b = $("rest");
-  tm = setInterval(() => {
-    s--;
-    const e = $("rest");
-    if (!e || s <= 0) {
-      clearInterval(tm);
-      if (e) e.textContent = "⏱ Descanso 60s";
-      navigator.vibrate && navigator.vibrate(400);
-      return;
-    }
-    e.textContent = "⏱ " + s + "s";
-  }, 1000);
-  b.textContent = "⏱ 60s";
+async function mudarTreino(t) {
+  ME.hoje = t;
+  await db.doc("users/" + ME.id).update({ hoje: t });
+  renderApp();
 }
 
-const dkey = () => "d_" + ME.uid + today();
-const diary = () => { try { return JSON.parse(localStorage.getItem(dkey()) || "[]") } catch (e) { return [] } };
-
-function saveDiary(d) {
-  try { localStorage.setItem(dkey(), JSON.stringify(d)) } catch (e) { }
-  const t = d.reduce((a, i) => ({ k: a.k + i.k, p: a.p + i.p, c: a.c + i.c }), { k: 0, p: 0, c: 0 });
-  LOG.k = Math.round(t.k); LOG.p = Math.round(t.p); LOG.c = Math.round(t.c);
-  saveLog();
-  render();
+async function toggleEx(id) {
+  if (LOG.done.includes(id)) {
+    LOG.done = LOG.done.filter(x => x !== id);
+  } else {
+    LOG.done.push(id);
+  }
+  await salvarLogFirebase();
+  renderApp();
 }
 
-function vDieta() {
-  if (!ME.peso) return vPerfil();
-  const m = calc(ME), d = diary(), t = d.reduce((a, i) => ({ k: a.k + i.k, p: a.p + i.p, c: a.c + i.c }), { k: 0, p: 0, c: 0 });
-  return `<div class="card"><div class="mut">Meta diária${ME.plus ? " (+20%)" : ""}</div><div class="grid"><div><b>${m.k}</b>kcal</div><div><b>${m.p}g</b>prot.</div><div><b>${m.c}g</b>carbo</div><div><b>${m.g}g</b>gord.</div></div><div class="mut" style="margin-top:8px">Consumido: ${Math.round(t.k)} kcal · ${Math.round(t.p)}g P · ${Math.round(t.c)}g C</div><label style="margin-top:12px;display:flex;align-items:center;gap:8px;cursor:pointer;"><input type="checkbox" style="width:auto" ${ME.plus ? "checked" : ""} onchange="saveUser({plus:this.checked}).then(render)"> Ampliar meta em 20% (Acelerador)</label></div>
- <div class="card"><label>Alimento (por 100 g)</label><select id="fd">${FOODS.map((f, i) => `<option value="${i}">${f.n} —${f.k}kcal · P${f.p} · C${f.c}</option>`).join("")}</select><label>Quantidade (g)</label><input id="gr" type="number" inputmode="numeric" value="100"><button class="btn" onclick="addF()">Adicionar Refeição</button></div>
- <div class="card">${d.length ? d.map((i, n) => `<div class="item"><div><b>${esc(i.n)}</b><div class="mut">${i.g} g · ${Math.round(i.k)} kcal</div></div><button class="x" onclick="delF(${n})">✕</button></div>`).join("") : '<span class="mut">Nada adicionado hoje.</span>'}</div><div class="mut" style="text-align:center;">O instrutor acompanha apenas os seus totais nutricionais diários.</div>`;
+async function salvarCarga(id, val) {
+  LOG.loads = LOG.loads || {};
+  LOG.loads[id] = val;
+  await salvarLogFirebase();
 }
 
-function addF() {
-  const f = FOODS[+$("fd").value], g = +$("gr").value;
-  if (!g) return;
-  const r = g / 100, d = diary();
-  d.push({ n: f.n, g, k: f.k * r, p: f.p * r, c: f.c * r });
-  saveDiary(d);
+async function salvarLogFirebase() {
+  const idLog = ME.id + "_" + today();
+  await db.doc("logs/" + idLog).set({
+    uid: ME.id,
+    date: today(),
+    done: LOG.done,
+    loads: LOG.loads
+  }, { merge: true });
 }
 
-function delF(n) {
-  const d = diary();
-  d.splice(n, 1);
-  saveDiary(d);
+function vPerfilAluno() {
+  $("v").innerHTML = `
+    <div class="card">
+      <h2>Meus Dados & Metas</h2>
+      <label>Peso Atual (kg)</label>
+      <input id="p-peso" type="number" value="${ME.peso || ""}">
+      
+      <label>Altura (cm)</label>
+      <input id="p-alt" type="number" value="${ME.alt || ""}">
+      
+      <label>Idade</label>
+      <input id="p-idade" type="number" value="${ME.idade || ""}">
+      
+      <label>Objetivo</label>
+      <select id="p-obj">
+        <option value="perder" ${ME.obj === 'perder' ? 'selected' : ''}>Perder Peso / Definir</option>
+        <option value="ganhar" ${ME.obj === 'ganhar' ? 'selected' : ''}>Ganhar Massa Muscular</option>
+      </select>
+      
+      <label>Dias de treino por semana</label>
+      <input id="p-dias" type="number" value="${ME.dias || "4"}">
+      
+      <button class="btn" onclick="salvarPerfil()">Salvar Perfil</button>
+    </div>
+  `;
 }
 
-function vProg() { return '<div class="card" id="hist"><span class="mut">Carregando histórico…</span></div>'; }
+async function salvarPerfil() {
+  const peso = parseFloat($("p-peso").value);
+  const alt = parseInt($("p-alt").value);
+  const idade = parseInt($("p-idade").value);
+  const obj = $("p-obj").value;
+  const dias = parseInt($("p-dias").value);
 
-async function loadHist() {
-  const s = await db.collection("logs").where("uid", "==", ME.uid).get();
-  HIST = s.docs.map(d => d.data()).sort((a, b) => b.date.localeCompare(a.date)).slice(0, 14);
-  const nm = {}; Object.values(PLAN).flat().forEach(e => nm[e.id] = e.n);
-  const el = $("hist"); if (!el) return;
-  el.innerHTML = "<h2>Últimos Dias de Treino</h2>" + (HIST.map(h => `<div class="item"><div><b>${h.date.split("-").reverse().join("/")}</b><div class="mut">${(h.done || []).length} exercícios concluídos · ${h.k || 0} kcal · ${h.p || 0}g proteína</div>${Object.entries(h.loads || {}).filter(x => x[1]).map(x => `<div class="mut" style="color:#e2e8f0;">${esc(nm[x[0]] \vert{}\vert{} "Exercício")}: ${esc(x[1])} kg</div>`).join("")}</div></div>`).join("") || '<span class="mut">Nenhum histórico registrado ainda.</span>');
+  if (!peso || !alt || !idade) return alert("Preencha todos os campos corretamente.");
+
+  ME.peso = peso;
+  ME.alt = alt;
+  ME.idade = idade;
+  ME.obj = obj;
+  ME.dias = dias;
+
+  await db.doc("users/" + ME.id).update({ peso, alt, idade, obj, dias });
+  alert("Perfil atualizado com sucesso!");
+  renderApp();
 }
 </script>
 </body>
