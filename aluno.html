@@ -5,7 +5,6 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Treinô - Painel do Aluno</title>
 
-<!-- PWA Manifest & Theme -->
 <link rel="manifest" href="./manifest.json">
 <meta name="theme-color" content="#ff6a1a">
 <link rel="icon" type="image/png" href="./icon-192.png">
@@ -15,7 +14,6 @@
 <meta name="apple-mobile-web-app-title" content="Treinô">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 
-<!-- Firebase SDK Compat -->
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
@@ -23,146 +21,93 @@
 <style>
 :root {
   --bg: #0b0f17;
-  --card-bg: rgba(255, 255, 255, 0.05);
-  --card-border: rgba(255, 255, 255, 0.12);
+  --card-bg: rgba(255,255,255,0.05);
+  --card-border: rgba(255,255,255,0.12);
   --tx: #f8fafc;
   --mut: #94a3b8;
   --pri: #ff6a1a;
   --pri-gradient: linear-gradient(135deg, #ff6a1a 0%, #ff3b00 100%);
-  --pri-shadow: rgba(255, 106, 26, 0.35);
-  --input-bg: rgba(255, 255, 255, 0.07);
+  --pri-shadow: rgba(255,106,26,0.35);
+  --input-bg: rgba(255,255,255,0.07);
   --ok: #22c55e;
   --no: #ef4444;
 }
-
 * { box-sizing: border-box; }
-
 body {
-  margin: 0 auto;
-  background: var(--bg);
-  color: var(--tx);
+  margin: 0 auto; background: var(--bg); color: var(--tx);
   font: 16px/1.4 system-ui, -apple-system, sans-serif;
-  max-width: 550px;
-  padding: 16px 16px 60px;
-  min-height: 100vh;
+  max-width: 550px; padding: 16px 16px 70px; min-height: 100vh;
 }
-
-h1 {
-  font-size: 22px;
-  margin: 8px 0 16px;
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  color: #fff;
-  font-weight: 800;
-}
-
-nav { display: flex; gap: 8px; margin-bottom: 16px; }
-
+h1 { font-size: 22px; margin: 8px 0 16px; display: flex; justify-content: space-between; align-items: center; color: #fff; font-weight: 800; }
+nav { display: flex; gap: 6px; margin-bottom: 16px; overflow-x: auto; scrollbar-width: none; }
+nav::-webkit-scrollbar { display: none; }
 nav button {
-  flex: 1;
-  padding: 12px 6px;
-  border: 1px solid var(--card-border);
-  background: var(--card-bg);
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
-  color: var(--mut);
-  border-radius: 14px;
-  font-size: 14px;
-  font-weight: 600;
-  cursor: pointer;
-  transition: all 0.3s ease;
+  flex: 1 0 auto; min-width: 58px; padding: 11px 8px; border: 1px solid var(--card-border); background: var(--card-bg);
+  color: var(--mut); border-radius: 13px; font-size: 12px; font-weight: 700; cursor: pointer;
 }
-
-nav button.on {
-  background: var(--pri-gradient);
-  color: #fff;
-  border-color: transparent;
-  box-shadow: 0 4px 14px var(--pri-shadow);
-}
-
+nav button.on { background: var(--pri-gradient); color: #fff; border-color: transparent; box-shadow: 0 4px 14px var(--pri-shadow); }
 .card {
-  background: var(--card-bg);
-  backdrop-filter: blur(20px);
-  -webkit-backdrop-filter: blur(20px);
-  border: 1px solid var(--card-border);
-  border-radius: 22px;
-  padding: 18px;
-  margin-bottom: 14px;
-  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+  background: var(--card-bg); backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px);
+  border: 1px solid var(--card-border); border-radius: 22px; padding: 18px; margin-bottom: 14px;
+  box-shadow: 0 10px 30px rgba(0,0,0,0.3);
 }
-
 h2 { font-size: 18px; margin: 0 0 12px; color: #fff; font-weight: 700; }
+h3 { font-size: 14px; margin: 14px 0 6px; color: var(--mut); font-weight: 700; text-transform: uppercase; letter-spacing: .4px; }
 label { display: block; font-size: 13px; color: var(--mut); margin: 10px 0 4px; font-weight: 500; }
-
 input, select {
-  width: 100%;
-  padding: 12px 14px;
-  border: 1px solid var(--card-border);
-  border-radius: 12px;
-  background: var(--input-bg);
-  color: var(--tx);
-  font-size: 15px;
-  outline: none;
-  transition: all 0.3s ease;
+  width: 100%; padding: 12px 14px; border: 1px solid var(--card-border); border-radius: 12px;
+  background: var(--input-bg); color: var(--tx); font-size: 15px; outline: none; transition: all .3s ease;
 }
-
 select option { background: #0b0f17; color: #fff; }
-
-input:focus, select:focus {
-  border-color: var(--pri);
-  box-shadow: 0 0 10px var(--pri-shadow);
-}
-
-.row { display: flex; gap: 10px; }
-.row > * { flex: 1; }
-
+input:focus, select:focus { border-color: var(--pri); box-shadow: 0 0 10px var(--pri-shadow); }
+.row { display: flex; gap: 8px; }
+.row > * { flex: 1; min-width: 0; }
 .btn {
-  width: 100%;
-  margin-top: 14px;
-  padding: 14px;
-  border: 0;
-  border-radius: 14px;
-  background: var(--pri-gradient);
-  color: #fff;
-  font-size: 15px;
-  font-weight: 700;
-  cursor: pointer;
-  box-shadow: 0 6px 18px var(--pri-shadow);
-  transition: all 0.2s ease;
+  width: 100%; margin-top: 14px; padding: 14px; border: 0; border-radius: 14px;
+  background: var(--pri-gradient); color: #fff; font-size: 15px; font-weight: 700; cursor: pointer;
+  box-shadow: 0 6px 18px var(--pri-shadow); transition: all .2s ease;
 }
-
-.btn:active { transform: scale(0.98); }
-
-.lnk {
-  background: none;
-  border: 0;
-  color: var(--pri);
-  font-size: 14px;
-  padding: 6px 12px;
-  cursor: pointer;
-  font-weight: 600;
-}
-
+.btn:active { transform: scale(.98); }
+.btn.sec { background: var(--card-bg); border: 1px solid var(--card-border); box-shadow: none; }
+.btn.sm { width: auto; margin: 0; padding: 8px 12px; font-size: 13px; border-radius: 10px; }
+.lnk { background: none; border: 0; color: var(--pri); font-size: 14px; padding: 6px 12px; cursor: pointer; font-weight: 600; }
 .mut { color: var(--mut); font-size: 13px; }
-
-.item {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 12px 10px;
-  border-bottom: 1px solid var(--card-border);
-  gap: 10px;
-}
-
+.item { display: flex; justify-content: space-between; align-items: center; padding: 12px 4px; border-bottom: 1px solid var(--card-border); gap: 10px; }
 .item:last-child { border-bottom: 0; }
-
-.check-box {
-  width: 24px;
-  height: 24px;
-  accent-color: var(--pri);
-  cursor: pointer;
-}
+.item.col { flex-direction: column; align-items: stretch; }
+.check-box { width: 26px; height: 26px; accent-color: var(--pri); cursor: pointer; flex: none; }
+.exok { display: flex; align-items: center; gap: 8px; font-size: 12px; color: var(--mut); }
+.feito b { color: var(--ok); }
+.bar { height: 8px; background: rgba(255,255,255,.1); border-radius: 6px; overflow: hidden; margin: 4px 0 10px; }
+.bar > i { display: block; height: 100%; background: var(--pri-gradient); }
+.bar.over > i { background: var(--no); }
+.macros { display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; text-align: center; }
+.macros div { background: var(--input-bg); border-radius: 12px; padding: 8px 2px; }
+.macros b { display: block; font-size: 16px; }
+.macros span { font-size: 11px; color: var(--mut); }
+.turbo { display: flex; align-items: center; justify-content: space-between; gap: 10px; padding: 12px; border-radius: 14px; border: 1px solid var(--pri); background: rgba(255,106,26,.08); margin-top: 12px; }
+.turbo.on { background: var(--pri-gradient); border-color: transparent; }
+.sw { position: relative; width: 50px; height: 28px; flex: none; margin: 0; }
+.sw input { opacity: 0; width: 100%; height: 100%; position: absolute; margin: 0; padding: 0; z-index: 2; cursor: pointer; }
+.sw i { position: absolute; inset: 0; background: rgba(255,255,255,.2); border-radius: 20px; transition: .2s; }
+.sw i::after { content: ""; position: absolute; width: 22px; height: 22px; left: 3px; top: 3px; background: #fff; border-radius: 50%; transition: .2s; }
+.sw input:checked + i { background: #fff; }
+.sw input:checked + i::after { left: 25px; background: var(--pri); }
+.res { background: var(--input-bg); border-radius: 14px; padding: 12px; margin-top: 10px; }
+.fotos { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+.fotos figure { margin: 0; text-align: center; }
+.fotos img { width: 100%; border-radius: 14px; aspect-ratio: 3/4; object-fit: cover; background: #111; }
+.fotos figcaption { font-size: 12px; color: var(--mut); margin-top: 4px; }
+.thumbs { display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; margin-top: 8px; }
+.thumbs img { width: 100%; aspect-ratio: 3/4; object-fit: cover; border-radius: 10px; }
+.modal { position: fixed; inset: 0; background: rgba(5,8,14,.92); z-index: 100; display: flex; align-items: center; justify-content: center; padding: 16px; }
+.modal .box { background: #121826; border: 1px solid var(--card-border); border-radius: 22px; max-width: 520px; width: 100%; max-height: 92vh; display: flex; flex-direction: column; padding: 18px; }
+.modal .txt { overflow-y: auto; font-size: 14px; color: #cbd5e1; margin: 8px 0; padding-right: 4px; }
+.modal .txt h4 { color: #fff; margin: 14px 0 4px; font-size: 14px; }
+.modal .txt p, .modal .txt ul { margin: 4px 0; }
+.chk { display: flex; gap: 10px; align-items: flex-start; font-size: 13px; color: #e2e8f0; margin: 10px 0 0; }
+.chk input { width: 22px; height: 22px; flex: none; accent-color: var(--pri); margin-top: 1px; }
+.pill { display: inline-block; font-size: 11px; padding: 3px 8px; border-radius: 10px; background: var(--input-bg); color: var(--mut); margin-right: 4px; }
 </style>
 </head>
 <body>
@@ -172,16 +117,10 @@ input:focus, select:focus {
 <script>
 // ===== PWA =====
 if ('serviceWorker' in navigator) {
-  window.addEventListener('load', () => {
-    navigator.serviceWorker.register('./sw.js').catch(err => console.log('SW erro: ', err));
-  });
+  window.addEventListener('load', () => navigator.serviceWorker.register('./sw.js').catch(e => console.log('SW erro:', e)));
 }
-
 let deferredPrompt = null;
-window.addEventListener('beforeinstallprompt', e => {
-  e.preventDefault();
-  deferredPrompt = e;
-});
+window.addEventListener('beforeinstallprompt', e => { e.preventDefault(); deferredPrompt = e; });
 
 // ===== FIREBASE =====
 const CFG = {
@@ -190,239 +129,672 @@ const CFG = {
   projectId: "treino-app-787d7",
   appId: "1:816237967715:web:96f923e22a8b4ed2e73b56"
 };
-
 firebase.initializeApp(CFG);
 const auth = firebase.auth();
 const db = firebase.firestore();
 
-let ME = null, PLAN = {}, LOG = { done: [], loads: {} }, tab = "tr";
+// ===== ESTADO =====
+let ME = null, TR = {}, OWN = [], LIB = [], LIBF = [], LOG = { done: [], loads: {}, detalhe: {} };
+let DIET = { itens: [] }, FOTOS = null, tab = "tr", DSEL = -1, DFIL = [];
 
 const $ = i => document.getElementById(i);
 const today = (d = new Date()) => new Date(d.getTime() - d.getTimezoneOffset() * 6e4).toISOString().slice(0, 10);
-const esc = t => String(t == null ? "" : t).replace(/[&<>"]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
+const esc = t => String(t == null ? "" : t).replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
 const fone = t => String(t || "").replace(/\D/g, "").slice(-11);
 const em = ph => ph + "@academia.app";
 const pwAluno = (ph, pin) => "Tn@" + ph + "#" + pin + "#treino26";
+const num = v => parseFloat(String(v == null ? "" : v).replace(",", ".").replace(/[^\d.]/g, "")) || 0;
+const r1 = v => Math.round(v * 10) / 10;
+const dt = ts => new Date(ts).toLocaleDateString("pt-BR");
 
+function toast(m) {
+  let t = $("toast");
+  if (!t) {
+    t = document.createElement("div"); t.id = "toast";
+    t.style.cssText = "position:fixed;left:50%;bottom:24px;transform:translateX(-50%);background:#1e293b;color:#fff;padding:12px 18px;border-radius:14px;border:1px solid rgba(255,255,255,.15);z-index:99;font-size:14px;max-width:90%;text-align:center";
+    document.body.appendChild(t);
+  }
+  t.textContent = m; t.style.display = "block";
+  clearTimeout(t._h); t._h = setTimeout(() => t.style.display = "none", 3200);
+}
+
+// ===== TABELA DE ALIMENTOS (por 100g): [nome, kcal, proteína, carboidrato, gordura] =====
+// Valores aproximados, baseados na tabela TACO e em rótulos médios.
+const FOODS = [
+// Cereais, massas e pães
+["Arroz branco cozido",128,2.5,28.1,0.2],["Arroz integral cozido",124,2.6,25.8,1],["Arroz parboilizado cozido",123,2.5,26.7,0.3],
+["Macarrão cozido",102,3.4,19.9,0.5],["Macarrão integral cozido",124,5.3,26.5,0.5],["Macarrão instantâneo (preparado)",440,9,60,18],
+["Pão francês",300,8,58.6,3.1],["Pão de forma branco",253,8,49.9,3],["Pão de forma integral",253,9.4,49.9,3.7],["Pão de queijo",363,5.1,34.2,24.6],
+["Pão sírio",275,9,55,1.2],["Tapioca (goma hidratada)",240,0,60,0],["Cuscuz de milho cozido",113,2.2,25.3,0.7],["Aveia em flocos",394,13.9,66.6,8.5],
+["Granola",420,10,64,14],["Farinha de mandioca",361,1.6,87.9,0.3],["Farinha de trigo",360,9.8,75.1,1.4],["Farinha de aveia",394,13.9,66.6,8.5],
+["Milho verde cozido",98,3.2,17.1,1.5],["Pipoca sem óleo",387,12.9,77.8,4.5],["Quinoa cozida",120,4.4,21.3,1.9],["Torrada",377,10,70,6],
+["Biscoito cream cracker",432,10,68.7,14.4],["Biscoito maisena",443,8,75.2,11.5],["Biscoito recheado",472,6,70,19],["Bolo simples",360,6,58,12],
+["Barra de cereal",390,5,70,10],["Cereal matinal de milho",375,7,84,1],["Wrap / tortilha de trigo",310,8,52,7],
+// Tubérculos
+["Batata inglesa cozida",52,1.2,11.9,0],["Batata doce cozida",77,0.6,18.4,0.1],["Mandioca cozida",125,0.6,30.1,0.3],["Inhame cozido",97,2.3,23.2,0.1],
+["Batata frita",312,3.8,41,15],["Purê de batata",83,1.8,14.7,2],["Mandioquinha cozida",80,0.9,19,0.2],
+// Leguminosas
+["Feijão carioca cozido",76,4.8,13.6,0.5],["Feijão preto cozido",77,4.5,14,0.5],["Lentilha cozida",93,6.3,16.3,0.5],["Grão-de-bico cozido",164,8.9,27.4,2.6],
+["Ervilha cozida",88,5,14.2,0.6],["Soja cozida",141,12.5,5.6,6.4],["Tofu",76,8,1.9,4.8],["Proteína texturizada de soja (seca)",330,50,32,1],
+// Carnes
+["Peito de frango grelhado",159,32,0,2.5],["Peito de frango cozido",163,31.5,0,3.2],["Coxa de frango sem pele cozida",167,26,0,6.5],["Sobrecoxa assada sem pele",215,26,0,12],
+["Frango frito empanado",300,23,10,18],["Patinho grelhado",219,35.9,0,7.3],["Alcatra grelhada",241,31.9,0,11.5],["Coxão mole cozido",219,32,0,9],
+["Contrafilé grelhado",278,32.4,0,15.5],["Filé mignon grelhado",220,32.8,0,8.8],["Picanha grelhada",289,29,0,18],["Acém cozido",215,28,0,11],
+["Carne moída refogada",212,26.7,0,10.9],["Costela bovina assada",373,28,0,28.5],["Fraldinha grelhada",250,29,0,14],["Lagarto cozido",190,32,0,6],
+["Lombo de porco assado",210,35,0,6.4],["Bisteca de porco grelhada",280,28,0,18],["Bacon frito",541,37,1.4,42],["Linguiça de porco frita",296,18,2,24],
+["Presunto",94,14,1,3.3],["Peito de peru",100,17,2,2.5],["Salsicha",257,12,3,22],["Mortadela",269,12,3,23],["Fígado bovino grelhado",225,29,4,9],
+["Hambúrguer bovino grelhado",260,24,0,18],["Carne seca cozida",313,36.7,0,17],
+// Ovos
+["Ovo cozido",146,13.3,0.6,9.5],["Ovo frito",240,15.6,1.2,18.6],["Clara de ovo cozida",59,13.4,0,0.1],["Ovo mexido",190,13,1.5,14],["Omelete simples",154,11,0.6,11.7],
+// Peixes e frutos do mar
+["Atum em conserva (natural)",118,26,0,1],["Atum em conserva (óleo)",166,26,0,6.5],["Sardinha em conserva (óleo)",285,15.9,0,24],["Salmão grelhado",229,24,0,14],
+["Tilápia grelhada",128,26,0,2.7],["Pescada cozida",111,22.9,0,1.8],["Merluza grelhada",120,24,0,2.5],["Camarão cozido",90,19,0,1],["Bacalhau cozido",136,29,0,1.5],["Lula cozida",175,18,3,10],
+// Laticínios
+["Leite integral",61,3.2,4.7,3.3],["Leite desnatado",35,3.4,4.9,0.1],["Leite semidesnatado",46,3.3,4.8,1.6],["Iogurte natural integral",61,3.5,4.7,3.3],
+["Iogurte grego natural",97,9,3.9,5],["Iogurte desnatado",42,4,6,0.2],["Iogurte de frutas",90,3,15,2],["Queijo mussarela",330,22.6,3,25.2],
+["Queijo minas frescal",264,17.4,3.2,20.2],["Queijo minas padrão",320,21,3.5,25],["Queijo prato",360,22.7,2.2,29.1],["Queijo parmesão",453,35.6,1.7,33.5],
+["Queijo coalho",320,23,3,24],["Requeijão cremoso",257,9.6,2.4,23.4],["Requeijão light",160,10,4,11],["Cottage",98,11,3.4,4.3],["Ricota",140,12.6,3.8,8.1],
+["Cream cheese",342,6,4,34],["Creme de leite",221,2.2,3.5,22],["Leite condensado",321,7.7,54.3,8.4],["Leite em pó integral",497,26,38,27],["Manteiga",726,0.4,0.1,82],
+["Margarina",596,0.2,0.8,65],
+// Suplementos
+["Whey protein (pó)",400,80,8,6],["Albumina (pó)",370,80,5,1],["Hipercalórico (pó)",380,15,75,3],["Caseína (pó)",370,78,6,2],["Pasta de amendoim",588,25,20,50],
+// Oleaginosas
+["Amendoim torrado",606,26,17,49],["Castanha-do-pará",643,14.5,15.1,63.5],["Castanha de caju",570,18.5,29,46],["Amêndoa",579,21,22,50],["Nozes",654,15,14,65],
+["Semente de chia",486,16.5,42,31],["Semente de linhaça",534,18,29,42],["Semente de girassol",584,21,20,51],["Coco ralado",450,3.5,15,43],
+// Frutas
+["Banana prata",98,1.3,26,0.1],["Banana nanica",92,1.4,23.8,0.1],["Maçã",56,0.3,15.2,0],["Pera",53,0.6,14,0.1],["Laranja",37,1,8.9,0.1],["Tangerina",38,0.8,9.6,0.1],
+["Mamão papaia",40,0.5,10.4,0.1],["Manga",64,0.4,16.7,0.3],["Abacaxi",48,0.9,12.3,0.1],["Melancia",33,0.9,8.1,0],["Melão",29,0.7,7.5,0],["Morango",30,0.9,6.8,0.3],
+["Uva",53,0.7,13.6,0.2],["Abacate",96,1.2,6,8.4],["Kiwi",51,1.3,11.5,0.6],["Goiaba",54,1.1,13,0.4],["Limão",32,0.9,11,0.1],["Maracujá",68,2,12,2],
+["Ameixa",53,0.8,13.9,0.1],["Pêssego",44,0.9,10.9,0.1],["Caqui",71,0.4,19,0.1],["Uva passa",300,3,79,0.5],["Açaí polpa (sem açúcar)",58,0.8,6.2,3.9],
+["Água de coco",22,0,5.3,0],["Suco de laranja natural",45,0.7,10.4,0.2],["Banana-passa",298,3.8,78,0.5],["Mirtilo",57,0.7,14,0.3],
+// Verduras e legumes
+["Alface",11,1.3,1.7,0.2],["Tomate",15,1.1,3.1,0.2],["Cenoura cozida",30,0.8,6.7,0.2],["Cenoura crua",34,1.3,7.7,0.2],["Brócolis cozido",25,2.1,4.4,0.5],
+["Couve refogada",90,2.4,8.7,5.4],["Couve crua",27,2.9,4.3,0.5],["Espinafre cozido",23,2.7,3.8,0.3],["Abobrinha cozida",15,1.1,3,0.2],["Beterraba cozida",32,1.3,7.2,0.1],
+["Pepino",10,0.9,2,0],["Cebola",39,1.7,8.9,0.1],["Chuchu cozido",19,0.4,4.8,0],["Repolho cru",17,0.9,3.9,0.1],["Couve-flor cozida",19,1.2,3.9,0.3],
+["Vagem cozida",25,1.4,5.3,0.2],["Abóbora cozida",20,0.7,5.1,0.1],["Berinjela cozida",19,0.7,4.4,0.1],["Pimentão",21,1,4.9,0.2],["Rúcula",13,1.8,2,0.1],
+["Aspargo",20,2.2,3.9,0.1],["Cogumelo champignon",22,3.1,3.3,0.3],["Alho",113,7,23.9,0.2],
+// Gorduras e doces
+["Azeite de oliva",884,0,0,100],["Óleo de soja",884,0,0,100],["Óleo de coco",862,0,0,100],["Maionese",302,0.6,7,30],["Açúcar refinado",387,0.3,99.5,0],["Açúcar mascavo",376,0.7,96,0],
+["Mel",309,0.4,84,0],["Chocolate ao leite",540,7.2,59.4,30],["Chocolate amargo 70%",580,8,35,42],["Brigadeiro",420,5,60,18],["Geleia de frutas",270,0.4,67,0.1],
+["Doce de leite",306,5.5,59,6.5],["Goiabada",280,0.6,72,0.1],["Sorvete de creme",208,3.6,25,10.5],["Gelatina pronta",62,1.5,13,0],
+// Bebidas e preparos
+["Café sem açúcar",2,0.1,0.3,0],["Refrigerante",41,0,10.5,0],["Refrigerante zero",0,0,0,0],["Cerveja",43,0.5,3.6,0],["Leite de soja",44,3.3,2.5,2],["Leite de amêndoas",17,0.6,0.6,1.1],
+["Pizza de mussarela",270,11,32,10],["Lasanha à bolonhesa",150,8,14,7],["Coxinha de frango",270,8,28,14],["Pastel de carne frito",320,8,30,19],["Hambúrguer com pão (lanche)",250,13,24,11],
+["Feijoada",150,9,10,8],["Strogonoff de frango",130,10,4,8]
+];
+
+// ===== LOGIN =====
 auth.onAuthStateChanged(async u => {
   if (!u) { renderLogin(); return; }
-
-  try {
-    const s = await db.doc("users/" + u.uid).get();
-    if (!s.exists) {
-      alert("Cadastro não encontrado no sistema. Fale com seu instrutor.");
-      auth.signOut();
-      return;
-    }
-
-    ME = { id: u.uid, ...s.data() };
-
-    if (ME.status && ME.status !== "ativo") {
-      alert("Sua conta está " + ME.status + ". Fale com seu instrutor.");
-      auth.signOut();
-      return;
-    }
-
-    const [pSnap, lSnap] = await Promise.all([
-      db.doc("plans/main").get(),
-      db.doc("logs/" + ME.id + "_" + today()).get()
-    ]);
-
-    PLAN = pSnap.data() || {};
-    LOG = { done: [], loads: {} };
-    if (lSnap.exists) {
-      const d = lSnap.data();
-      LOG.done = Array.isArray(d.done) ? d.done : [];
-      LOG.loads = d.loads || {};
-    }
-
-    renderApp();
-  } catch (e) {
+  try { await carregarTudo(u); renderApp(); if (!(ME.lgpd && ME.lgpd.aceito)) mostrarLGPD(); }
+  catch (e) {
     console.log(e);
-    $("app").innerHTML = `
-      <div class="card" style="margin-top:15vh; text-align:center;">
-        <h2>Sem conexão</h2>
-        <p class="mut">Não foi possível carregar seus dados. Verifique a internet.</p>
-        <button class="btn" onclick="location.reload()">Tentar de novo</button>
-      </div>`;
+    $("app").innerHTML = `<div class="card" style="margin-top:15vh;text-align:center;"><h2>Sem conexão</h2>
+      <p class="mut">Não foi possível carregar seus dados. Verifique a internet.</p>
+      <button class="btn" onclick="location.reload()">Tentar de novo</button></div>`;
   }
 });
+
+async function carregarTudo(u) {
+  const s = await db.doc("users/" + u.uid).get();
+  if (!s.exists) { alert("Cadastro não encontrado no sistema. Fale com seu instrutor."); auth.signOut(); throw new Error("sem cadastro"); }
+  ME = { id: u.uid, ...s.data() };
+  if (ME.status && ME.status !== "ativo") { alert("Sua conta está " + ME.status + ". Fale com seu instrutor."); auth.signOut(); throw new Error("inativo"); }
+
+  const [tS, oS, pS, lS, dS] = await Promise.all([
+    db.doc("treinos/" + ME.id).get(),
+    db.doc("treinos_aluno/" + ME.id).get(),
+    db.doc("plans/main").get().catch(() => null),
+    db.doc("logs/" + ME.id + "_" + today()).get(),
+    db.doc("dietas/" + ME.id + "_" + today()).get()
+  ]);
+
+  TR = tS.exists ? tS.data() : {};
+  OWN = oS.exists && Array.isArray(oS.data().lista) ? oS.data().lista : [];
+  LOG = { done: [], loads: {}, detalhe: {} };
+  if (lS.exists) { const d = lS.data(); LOG = { ...d, done: Array.isArray(d.done) ? d.done : [], loads: d.loads || {}, detalhe: d.detalhe || {} }; }
+  DIET = { itens: [] };
+  if (dS.exists && Array.isArray(dS.data().itens)) DIET.itens = dS.data().itens;
+
+  // Biblioteca de exercícios do instrutor
+  const lib = [], vistos = new Set();
+  const add = x => {
+    const n = x && (x.n || x.nome); if (!n) return;
+    const k = String(n).toLowerCase().trim(); if (vistos.has(k)) return; vistos.add(k);
+    lib.push({ n, g: x.g || x.grupo || "Geral", gif: x.gif || "" });
+  };
+  const plan = (pS && pS.exists) ? pS.data() : {};
+  Object.keys(plan).forEach(k => { if (Array.isArray(plan[k])) plan[k].forEach(add); });
+  try { const q = await db.collection("exercicios").limit(600).get(); q.forEach(d => add(d.data())); } catch (e) {}
+  lib.sort((a, b) => a.g.localeCompare(b.g) || a.n.localeCompare(b.n));
+  LIB = lib;
+}
 
 function renderLogin() {
   $("app").innerHTML = `
     <div class="card" style="margin-top:15vh; text-align:center;">
       <h1 style="justify-content:center;">🏋️ Treinô</h1>
       <p class="mut">Área do Aluno</p>
-
       <label style="text-align:left;">Telefone (com DDD)</label>
       <input id="lphone" type="tel" placeholder="11999998888" inputmode="tel">
-
       <label style="text-align:left;">Senha / PIN (4 a 6 números)</label>
       <input id="lpin" type="password" maxlength="6" inputmode="numeric" placeholder="••••">
-
       <button class="btn" onclick="fazerLogin()">Entrar no Treino</button>
-    </div>
-  `;
+    </div>`;
 }
 
 async function fazerLogin() {
   const ph = fone($("lphone").value), pin = $("lpin").value.trim();
   if (ph.length < 10 || !/^\d{4,6}$/.test(pin)) return alert("Insira o telefone correto e a senha de 4 a 6 números.");
-
-  try {
-    await auth.signInWithEmailAndPassword(em(ph), pwAluno(ph, pin));
-  } catch (e) {
-    alert("Telefone ou senha incorretos.");
-  }
+  try { await auth.signInWithEmailAndPassword(em(ph), pwAluno(ph, pin)); }
+  catch (e) { alert("Telefone ou senha incorretos."); }
 }
+function sair() { auth.signOut(); }
 
-function sair() {
-  auth.signOut();
-}
-
-async function renderApp() {
-  const T = [["tr", "Treino"], ["per", "Meu Perfil"]];
+// ===== APP =====
+function renderApp() {
+  const T = [["tr", "🏋️ Treino"], ["own", "🛠️ Montar"], ["di", "🍎 Dieta"], ["ft", "📸 Fotos"], ["nu", "🥗 Nutri"], ["per", "👤 Perfil"]];
   $("app").innerHTML = `
     <h1><span>🔥 ${esc(ME.nome)}</span><button class="lnk" onclick="sair()">Sair</button></h1>
-    <nav>${T.map(t => `<button class="${t[0] === tab ? "on" : ""}" onclick="tab='${t[0]}';renderApp()">${t[1]}</button>`).join("")}</nav>
-    <div id="v"></div>
-  `;
+    <nav>${T.map(t => `<button class="${t[0] === tab ? "on" : ""}" onclick="irTab('${t[0]}')">${t[1]}</button>`).join("")}</nav>
+    <div id="v"></div>`;
+  if (tab === "tr") vTreino();
+  else if (tab === "own") vMontar();
+  else if (tab === "di") vDieta();
+  else if (tab === "ft") vFotos();
+  else if (tab === "nu") vNutri();
+  else vPerfil();
+}
+function irTab(t) { tab = t; renderApp(); window.scrollTo(0, 0); }
 
-  if (tab === "tr") vTreinoAluno();
-  else vPerfilAluno();
+// ===== LOG (execução) =====
+async function salvarLog() {
+  try {
+    await db.doc("logs/" + ME.id + "_" + today()).set({ ...LOG, uid: ME.id, aluno: ME.nome || "", date: today(), ts: Date.now() });
+  } catch (e) { console.log(e); toast("Não foi possível salvar. Verifique a internet."); }
 }
 
-async function vTreinoAluno() {
-  const tAtual = ME.hoje || "A";
-  const exercicios = PLAN[tAtual] || [];
-
+// ===== TREINO DO INSTRUTOR =====
+function vTreino() {
+  const t = ME.hoje || "A", ex = Array.isArray(TR[t]) ? TR[t] : [];
+  const letras = ["A", "B", "C", "D", "E"];
+  const feitos = ex.filter((e, i) => LOG.done.includes(e.id || (t + "_" + i))).length;
   $("v").innerHTML = `
     <div class="card">
-      <h2>Escolher Treino do Dia</h2>
-      <div class="row">
-        ${["A", "B", "C", "D", "E"].map(x => `<button class="btn" style="margin-top:0; background:${x === tAtual ? 'var(--pri-gradient)' : 'var(--card-bg)'}; border:1px solid var(--card-border);" onclick="mudarTreino('${x}')">${x}</button>`).join("")}
-      </div>
+      <h2>Treino do dia</h2>
+      <div class="row">${letras.map(x => `<button class="btn ${x === t ? "" : "sec"}" style="margin-top:0;padding:12px 0" onclick="mudarTreino('${x}')">${x}</button>`).join("")}</div>
     </div>
-
     <div class="card">
-      <h2>Treino ${esc(tAtual)}</h2>
-      ${exercicios.length ? exercicios.map(e => {
-        const feito = LOG.done.includes(e.id);
-        const carga = LOG.loads[e.id] || "";
-        return `
-          <div class="item" style="flex-direction:column; align-items:flex-start;">
-            <div style="display:flex; width:100%; justify-content:space-between; align-items:center;">
-              <div>
-                <b>${esc(e.n)}</b>
-                <div class="mut">${esc(e.g)} · ${esc(e.s)}x${esc(e.r)}${e.gif ? ' · <a href="' + esc(e.gif) + '" target="_blank" rel="noopener" style="color:var(--pri)">GIF</a>' : ''}</div>
-              </div>
-              <input type="checkbox" class="check-box" style="width:24px;" ${feito ? "checked" : ""} onclick="toggleEx('${esc(e.id)}')">
+      <h2>Treino ${esc(t)} <span class="mut">· ${feitos}/${ex.length} feitos</span></h2>
+      ${ex.length ? ex.map((e, i) => {
+        const id = e.id || (t + "_" + i), feito = LOG.done.includes(id);
+        return `<div class="item col">
+          <div style="display:flex;justify-content:space-between;align-items:center;gap:10px">
+            <div class="${feito ? "feito" : ""}">
+              <b>${esc(e.n)}</b>
+              <div class="mut">${esc(e.g || "")} · <b style="color:#fff">${esc(e.s || "-")}</b> séries × <b style="color:#fff">${esc(e.r || "-")}</b> reps${e.gif ? ` · <a href="${esc(e.gif)}" target="_blank" rel="noopener" style="color:var(--pri)">GIF</a>` : ""}</div>
             </div>
-            <div style="width:100%; margin-top:8px; display:flex; gap:8px; align-items:center;">
-              <input type="text" placeholder="Carga (ex: 20kg)" value="${esc(carga)}" onchange="salvarCarga('${esc(e.id)}', this.value)" style="padding:8px 10px; font-size:13px;">
-            </div>
+            <label class="exok" style="margin:0"><input type="checkbox" class="check-box" ${feito ? "checked" : ""} onclick="toggleEx('${t}',${i})">Executado</label>
           </div>
-        `;
-      }).join("") : '<div class="mut">Nenhum exercício cadastrado para este treino ainda.</div>'}
-    </div>
-  `;
+          <div style="margin-top:8px;display:flex;gap:8px;align-items:center">
+            <span class="mut" style="white-space:nowrap">Carga:</span>
+            <input type="text" placeholder="ex: 20kg" value="${esc(e.carga || "")}" onchange="editCarga('${t}',${i},this.value)" style="padding:8px 10px;font-size:14px">
+          </div>
+        </div>`;
+      }).join("") : `<div class="mut">Seu instrutor ainda não cadastrou exercícios no treino ${esc(t)} para você. Você pode montar o seu próprio na aba <b>Montar</b>.</div>`}
+    </div>`;
 }
 
 async function mudarTreino(t) {
-  ME.hoje = t;
-  renderApp();
+  ME.hoje = t; renderApp();
   try { await db.doc("users/" + ME.id).update({ hoje: t }); } catch (e) { console.log(e); }
 }
 
-async function toggleEx(id) {
+async function toggleEx(t, i) {
+  const e = TR[t][i], id = e.id || (t + "_" + i);
   if (LOG.done.includes(id)) {
     LOG.done = LOG.done.filter(x => x !== id);
+    delete LOG.detalhe[id];
   } else {
     LOG.done.push(id);
+    LOG.detalhe[id] = { ts: Date.now(), treino: t, n: e.n, g: e.g || "", s: e.s || "", r: e.r || "", carga: e.carga || "", proprio: false };
   }
   renderApp();
-  await salvarLogFirebase();
+  await salvarLog();
 }
 
-async function salvarCarga(id, val) {
-  LOG.loads = LOG.loads || {};
+async function editCarga(t, i, val) {
+  const e = TR[t][i], antes = e.carga || "";
+  val = String(val).trim();
+  if (val === antes) return;
+  e.carga = val;
+  const id = e.id || (t + "_" + i);
   LOG.loads[id] = val;
-  await salvarLogFirebase();
-}
-
-async function salvarLogFirebase() {
-  const idLog = ME.id + "_" + today();
+  if (LOG.detalhe[id]) LOG.detalhe[id].carga = val;
   try {
-    await db.doc("logs/" + idLog).set({
-      uid: ME.id,
-      date: today(),
-      done: LOG.done,
-      loads: LOG.loads
-    }, { merge: true });
-  } catch (e) {
-    console.log(e);
-    alert("Não foi possível salvar. Verifique a internet.");
-  }
+    await db.doc("treinos/" + ME.id).set({ [t]: TR[t] }, { merge: true });
+    await salvarLog();
+    if (num(val) > num(antes)) {
+      await db.collection("alertas").add({
+        uid: ME.id, aluno: ME.nome || "", tipo: "carga", treino: t, exercicio: e.n,
+        de: antes, para: val, ts: Date.now(), data: today(), lido: false
+      });
+      toast("Carga atualizada. Seu instrutor foi avisado do aumento.");
+    } else toast("Carga atualizada.");
+  } catch (err) { console.log(err); toast("Não foi possível salvar a carga."); }
 }
 
-function vPerfilAluno() {
+// ===== MONTAR O PRÓPRIO TREINO =====
+function vMontar() {
+  const grupos = [...new Set(LIB.map(x => x.g))];
+  $("v").innerHTML = `
+    <div class="card">
+      <h2>Meu treino próprio <span class="mut">· ${OWN.length} exercícios</span></h2>
+      ${OWN.length ? OWN.map((e, i) => {
+        const feito = LOG.done.includes(e.id);
+        return `<div class="item col">
+          <div style="display:flex;justify-content:space-between;align-items:center;gap:10px">
+            <div class="${feito ? "feito" : ""}"><b>${esc(e.n)}</b><div class="mut">${esc(e.g || "")}</div></div>
+            <label class="exok" style="margin:0"><input type="checkbox" class="check-box" ${feito ? "checked" : ""} onclick="toggleOwn(${i})">Executado</label>
+          </div>
+          <div class="row" style="margin-top:8px;align-items:center">
+            <input type="number" inputmode="numeric" value="${esc(e.s)}" placeholder="Séries" onchange="editOwn(${i},'s',this.value)" style="padding:8px 10px;font-size:14px">
+            <input type="number" inputmode="numeric" value="${esc(e.r)}" placeholder="Reps" onchange="editOwn(${i},'r',this.value)" style="padding:8px 10px;font-size:14px">
+            <input type="text" value="${esc(e.carga || "")}" placeholder="Carga" onchange="editOwn(${i},'carga',this.value)" style="padding:8px 10px;font-size:14px">
+            <button class="btn sm sec" style="flex:none" onclick="delOwn(${i})">🗑️</button>
+          </div>
+        </div>`;
+      }).join("") : '<div class="mut">Você ainda não montou nenhum treino. Escolha exercícios abaixo.</div>'}
+    </div>
+    <div class="card">
+      <h2>Adicionar exercício</h2>
+      ${LIB.length ? `
+        <select id="lg" onchange="filtrarLib()"><option value="">Todos os grupos</option>${grupos.map(g => `<option value="${esc(g)}">${esc(g)}</option>`).join("")}</select>
+        <input id="lq" placeholder="Buscar exercício..." oninput="filtrarLib()" style="margin-top:8px">
+        <div id="libres" style="margin-top:8px"></div>` :
+        '<div class="mut">Ainda não há exercícios na biblioteca do instrutor.</div>'}
+    </div>`;
+  if (LIB.length) filtrarLib();
+}
+
+function filtrarLib() {
+  const g = $("lg").value, q = $("lq").value.toLowerCase().trim();
+  LIBF = LIB.filter(x => (!g || x.g === g) && (!q || x.n.toLowerCase().includes(q))).slice(0, 40);
+  $("libres").innerHTML = LIBF.length ? LIBF.map((x, i) => `
+    <div class="item"><div><b>${esc(x.n)}</b><div class="mut">${esc(x.g)}</div></div>
+    <button class="btn sm" onclick="addOwn(${i})">+ Add</button></div>`).join("") : '<div class="mut">Nenhum exercício encontrado.</div>';
+}
+
+async function saveOwn() {
+  try { await db.doc("treinos_aluno/" + ME.id).set({ uid: ME.id, aluno: ME.nome || "", lista: OWN, ts: Date.now() }); }
+  catch (e) { console.log(e); toast("Não foi possível salvar."); }
+}
+async function addOwn(i) {
+  const x = LIBF[i]; if (!x) return;
+  OWN.push({ id: "own_" + Date.now(), n: x.n, g: x.g, gif: x.gif, s: "3", r: "12", carga: "" });
+  toast(x.n + " adicionado");
+  renderApp(); await saveOwn();
+}
+async function editOwn(i, campo, val) {
+  OWN[i][campo] = String(val).trim();
+  const id = OWN[i].id;
+  if (campo === "carga") { LOG.loads[id] = OWN[i].carga; if (LOG.detalhe[id]) LOG.detalhe[id].carga = OWN[i].carga; salvarLog(); }
+  await saveOwn();
+}
+async function delOwn(i) {
+  if (!confirm("Remover este exercício do seu treino?")) return;
+  const id = OWN[i].id;
+  OWN.splice(i, 1);
+  LOG.done = LOG.done.filter(x => x !== id); delete LOG.detalhe[id];
+  renderApp(); await saveOwn(); salvarLog();
+}
+async function toggleOwn(i) {
+  const e = OWN[i], id = e.id;
+  if (LOG.done.includes(id)) { LOG.done = LOG.done.filter(x => x !== id); delete LOG.detalhe[id]; }
+  else {
+    LOG.done.push(id);
+    LOG.detalhe[id] = { ts: Date.now(), treino: "Próprio", n: e.n, g: e.g || "", s: e.s || "", r: e.r || "", carga: e.carga || "", proprio: true };
+  }
+  renderApp(); await salvarLog();
+}
+
+// ===== DIETA: META + CALCULADORA =====
+function calcMeta() {
+  const peso = num(ME.peso), alt = num(ME.alt), idade = num(ME.idade);
+  if (!peso || !alt || !idade) return null;
+  const masc = (ME.sexo || "m") === "m";
+  const tmb = 10 * peso + 6.25 * alt - 5 * idade + (masc ? 5 : -161);
+  const d = num(ME.dias) || 4;
+  const fat = d <= 1 ? 1.2 : d <= 3 ? 1.375 : d <= 5 ? 1.55 : 1.725;
+  const get = tmb * fat;
+  const perder = ME.obj !== "ganhar";
+  const kcal = perder ? get * 0.8 : get * 1.15;
+  const p = peso * 2, f = peso * (perder ? 0.9 : 1);
+  const c = Math.max(0, (kcal - p * 4 - f * 9) / 4);
+  const mult = ME.turbo ? 1.2 : 1;
+  return { tmb: Math.round(tmb), get: Math.round(get), kcal: Math.round(kcal * mult), p: Math.round(p * mult), c: Math.round(c * mult), f: Math.round(f * mult), perder, turbo: !!ME.turbo };
+}
+
+function totaisDia() {
+  return DIET.itens.reduce((a, x) => ({ k: a.k + x.k, p: a.p + x.p, c: a.c + x.c, f: a.f + x.f }), { k: 0, p: 0, c: 0, f: 0 });
+}
+
+function barra(rot, v, meta, un) {
+  const pc = meta ? Math.min(100, v / meta * 100) : 0, over = meta && v > meta;
+  return `<div style="display:flex;justify-content:space-between;font-size:13px"><span>${rot}</span><span><b>${Math.round(v)}</b> / ${meta}${un}</span></div>
+    <div class="bar ${over ? "over" : ""}"><i style="width:${pc}%"></i></div>`;
+}
+
+function vDieta() {
+  const m = calcMeta(), tot = totaisDia();
+  $("v").innerHTML = `
+    <div class="card">
+      <h2>Minha meta diária</h2>
+      ${m ? `
+        <div class="mut">Objetivo: <b style="color:#fff">${m.perder ? "Perder peso / definir" : "Ganhar massa muscular"}</b> · Gasto estimado: ${m.get} kcal/dia</div>
+        <div class="macros" style="margin-top:10px">
+          <div><b>${m.kcal}</b><span>kcal</span></div><div><b>${m.p}g</b><span>proteína</span></div>
+          <div><b>${m.c}g</b><span>carbo</span></div><div><b>${m.f}g</b><span>gordura</span></div>
+        </div>
+        <div class="turbo ${m.turbo ? "on" : ""}">
+          <div><b>🚀 Modo Turbo +20%</b><div style="font-size:12px;opacity:.85">Aumenta toda a meta (calorias e macros) em 20%</div></div>
+          <label class="sw"><input type="checkbox" ${m.turbo ? "checked" : ""} onchange="setTurbo(this.checked)"><i></i></label>
+        </div>
+        <div class="mut" style="margin-top:10px">Estimativa pela fórmula de Mifflin-St Jeor. Não substitui a orientação de um nutricionista.</div>
+      ` : `<div class="mut">Preencha peso, altura, idade e sexo na aba <b>Perfil</b> para calcular sua meta.</div>
+           <button class="btn" onclick="irTab('per')">Ir para o Perfil</button>`}
+    </div>
+
+    <div class="card">
+      <h2>Calculadora de alimentos</h2>
+      <input id="fq" placeholder="Buscar alimento (ex: frango, arroz, banana)..." oninput="filtrarAlim()">
+      <div id="fres" style="margin-top:6px;max-height:260px;overflow-y:auto"></div>
+      <div id="fsel"></div>
+      <div class="mut" style="margin-top:8px">${FOODS.length} alimentos · valores por 100g (aproximados)</div>
+    </div>
+
+    <div class="card">
+      <h2>Consumido hoje</h2>
+      ${m ? barra("Calorias", tot.k, m.kcal, " kcal") + barra("Proteína", tot.p, m.p, "g") + barra("Carboidrato", tot.c, m.c, "g") + barra("Gordura", tot.f, m.f, "g") :
+        `<div class="mut">Total: ${Math.round(tot.k)} kcal · P ${r1(tot.p)}g · C ${r1(tot.c)}g · G ${r1(tot.f)}g</div>`}
+      <h3>Refeições</h3>
+      ${DIET.itens.length ? DIET.itens.map((x, i) => `
+        <div class="item"><div><b>${esc(x.n)}</b> <span class="mut">${x.g}g</span>
+          <div class="mut"><span class="pill">${esc(x.ref)}</span>${Math.round(x.k)} kcal · P ${r1(x.p)} · C ${r1(x.c)} · G ${r1(x.f)}</div></div>
+          <button class="btn sm sec" onclick="delAlim(${i})">🗑️</button></div>`).join("") : '<div class="mut">Nada registrado hoje ainda.</div>'}
+    </div>`;
+  filtrarAlim(true);
+}
+
+async function setTurbo(on) {
+  ME.turbo = on; renderApp();
+  try { await db.doc("users/" + ME.id).update({ turbo: on }); } catch (e) { console.log(e); }
+  toast(on ? "🚀 Turbo ativado: meta +20%" : "Turbo desativado");
+}
+
+function filtrarAlim(manter) {
+  const q = ($("fq") ? $("fq").value : "").trim();
+  const norm = s => s.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase();
+  const nq = norm(q);
+  DFIL = [];
+  FOODS.forEach((f, i) => { if (!nq || norm(f[0]).includes(nq)) DFIL.push(i); });
+  if (!manter) DSEL = -1;
+  const lista = DFIL.slice(0, 60);
+  $("fres").innerHTML = lista.map(i => {
+    const f = FOODS[i];
+    return `<div class="item" style="cursor:pointer;padding:9px 4px" onclick="selAlim(${i})"><div><b style="font-size:14px">${esc(f[0])}</b>
+      <div class="mut">${f[1]} kcal · P ${f[2]} · C ${f[3]} · G ${f[4]}</div></div><span style="color:var(--pri)">›</span></div>`;
+  }).join("") || '<div class="mut" style="padding:8px">Nenhum alimento encontrado.</div>';
+  if (DSEL >= 0) mostrarSel();
+  else $("fsel").innerHTML = "";
+}
+
+function selAlim(i) { DSEL = i; mostrarSel(); $("fsel").scrollIntoView({ behavior: "smooth", block: "center" }); }
+
+function mostrarSel() {
+  const f = FOODS[DSEL];
+  $("fsel").innerHTML = `
+    <div class="res">
+      <b>${esc(f[0])}</b>
+      <div class="row" style="margin-top:8px">
+        <div><label style="margin-top:0">Quantidade (g)</label><input id="fg" type="number" inputmode="decimal" value="100" oninput="atualizarCalc()"></div>
+        <div><label style="margin-top:0">Refeição</label><select id="fr"><option>Café da manhã</option><option>Almoço</option><option>Lanche</option><option>Jantar</option><option>Ceia</option></select></div>
+      </div>
+      <div class="macros" id="fcalc" style="margin-top:10px"></div>
+      <button class="btn" onclick="addAlim()">Adicionar ao dia</button>
+    </div>`;
+  atualizarCalc();
+}
+
+function valoresSel() {
+  const f = FOODS[DSEL], g = num($("fg").value), k = g / 100;
+  return { n: f[0], g, k: f[1] * k, p: f[2] * k, c: f[3] * k, f: f[4] * k };
+}
+function atualizarCalc() {
+  const v = valoresSel();
+  $("fcalc").innerHTML = `<div><b>${Math.round(v.k)}</b><span>kcal</span></div><div><b>${r1(v.p)}g</b><span>proteína</span></div><div><b>${r1(v.c)}g</b><span>carbo</span></div><div><b>${r1(v.f)}g</b><span>gordura</span></div>`;
+}
+
+async function saveDiet() {
+  try { await db.doc("dietas/" + ME.id + "_" + today()).set({ uid: ME.id, aluno: ME.nome || "", date: today(), itens: DIET.itens, ts: Date.now() }); }
+  catch (e) { console.log(e); toast("Não foi possível salvar a refeição."); }
+}
+async function addAlim() {
+  const v = valoresSel();
+  if (!v.g || v.g <= 0) return toast("Informe a quantidade em gramas.");
+  v.ref = $("fr").value;
+  DIET.itens.push(v);
+  DSEL = -1;
+  toast(v.n + " adicionado");
+  renderApp(); await saveDiet();
+}
+async function delAlim(i) { DIET.itens.splice(i, 1); renderApp(); await saveDiet(); }
+
+// ===== FOTOS DE COMPARAÇÃO (1 a cada 30 dias) =====
+async function vFotos() {
+  $("v").innerHTML = '<div class="card"><p class="mut">Carregando fotos...</p></div>';
+  if (FOTOS === null) {
+    try {
+      const q = await db.collection("fotos").where("uid", "==", ME.id).get();
+      FOTOS = q.docs.map(d => ({ id: d.id, ...d.data() })).sort((a, b) => a.ts - b.ts);
+    } catch (e) { console.log(e); FOTOS = null; $("v").innerHTML = '<div class="card"><p class="mut">Não foi possível carregar as fotos. Verifique a internet.</p></div>'; return; }
+  }
+  const ult = FOTOS[FOTOS.length - 1];
+  const dias = ult ? Math.floor((Date.now() - ult.ts) / 864e5) : 999;
+  const pode = !ult || dias >= 30;
+  const falta = 30 - dias;
+  $("v").innerHTML = `
+    <div class="card">
+      <h2>Foto de evolução</h2>
+      ${pode ? `
+        <div class="mut">${ult ? "Já se passaram " + dias + " dias desde a última foto. Hora de enviar a nova!" : "Envie sua primeira foto. Ela será o ponto de partida da comparação."}</div>
+        <label>Peso atual (kg) — opcional</label>
+        <input id="fpeso" type="number" inputmode="decimal" step="0.1" value="${esc(ME.peso || "")}">
+        <label>Foto (corpo inteiro, mesma pose e luz de sempre)</label>
+        <input id="ffile" type="file" accept="image/*" onchange="enviarFoto(this)">
+      ` : `<div class="mut">Próxima foto liberada em <b style="color:#fff">${falta} dia${falta > 1 ? "s" : ""}</b> (${dt(ult.ts + 30 * 864e5)}). É possível enviar uma foto a cada 30 dias.</div>`}
+    </div>
+    ${FOTOS.length ? `
+    <div class="card">
+      <h2>Comparação</h2>
+      ${FOTOS.length > 1 ? `<div class="row">
+        <div><label style="margin-top:0">Antes</label><select id="fa" onchange="atualizarComp()">${FOTOS.map((f, i) => `<option value="${i}" ${i === 0 ? "selected" : ""}>${dt(f.ts)}</option>`).join("")}</select></div>
+        <div><label style="margin-top:0">Depois</label><select id="fb" onchange="atualizarComp()">${FOTOS.map((f, i) => `<option value="${i}" ${i === FOTOS.length - 1 ? "selected" : ""}>${dt(f.ts)}</option>`).join("")}</select></div>
+      </div>` : '<div class="mut">Com a segunda foto a comparação aparece aqui.</div>'}
+      <div id="comp" style="margin-top:10px"></div>
+    </div>
+    <div class="card"><h2>Histórico</h2><div class="thumbs">${FOTOS.map(f => `<div><img src="${f.img}" alt=""><div class="mut" style="font-size:11px;text-align:center">${dt(f.ts)}</div></div>`).join("")}</div></div>` : ""}`;
+  if (FOTOS.length) atualizarComp();
+}
+
+function atualizarComp() {
+  const a = FOTOS[$("fa") ? +$("fa").value : 0], b = FOTOS[$("fb") ? +$("fb").value : FOTOS.length - 1];
+  const fig = (f, t) => `<figure><img src="${f.img}" alt=""><figcaption><b>${t}</b> · ${dt(f.ts)}${f.peso ? " · " + f.peso + " kg" : ""}</figcaption></figure>`;
+  let dif = "";
+  if (a !== b && a.peso && b.peso) { const d = r1(b.peso - a.peso); dif = `<div class="res" style="text-align:center">Variação de peso: <b>${d > 0 ? "+" : ""}${d} kg</b> em ${Math.max(0, Math.round((b.ts - a.ts) / 864e5))} dias</div>`; }
+  $("comp").innerHTML = `<div class="fotos">${fig(a, "Antes")}${a === b ? "" : fig(b, "Depois")}</div>${dif}`;
+}
+
+function redimensionar(file) {
+  return new Promise((res, rej) => {
+    const r = new FileReader();
+    r.onload = () => {
+      const im = new Image();
+      im.onload = () => {
+        const M = 720, k = Math.min(1, M / Math.max(im.width, im.height));
+        const w = Math.round(im.width * k), h = Math.round(im.height * k);
+        const c = document.createElement("canvas"); c.width = w; c.height = h;
+        c.getContext("2d").drawImage(im, 0, 0, w, h);
+        let q = 0.72, d = c.toDataURL("image/jpeg", q);
+        while (d.length > 700000 && q > 0.3) { q -= 0.1; d = c.toDataURL("image/jpeg", q); }
+        res(d);
+      };
+      im.onerror = rej; im.src = r.result;
+    };
+    r.onerror = rej; r.readAsDataURL(file);
+  });
+}
+
+async function enviarFoto(inp) {
+  const file = inp.files && inp.files[0]; if (!file) return;
+  const ult = FOTOS && FOTOS[FOTOS.length - 1];
+  if (ult && Date.now() - ult.ts < 30 * 864e5) return toast("Ainda não passaram 30 dias.");
+  toast("Enviando foto...");
+  try {
+    const img = await redimensionar(file);
+    const peso = num($("fpeso").value) || null;
+    const ts = Date.now();
+    const doc = { uid: ME.id, aluno: ME.nome || "", ts, data: today(), peso, img };
+    const ref = await db.collection("fotos").add(doc);
+    FOTOS.push({ id: ref.id, ...doc });
+    toast("Foto enviada! ✅");
+    vFotos();
+  } catch (e) { console.log(e); toast("Erro ao enviar a foto. Tente de novo."); }
+}
+
+// ===== NUTRICIONISTA (em breve) =====
+function vNutri() {
+  $("v").innerHTML = `
+    <div class="card" style="text-align:center;padding:32px 18px">
+      <div style="font-size:56px">🥗</div>
+      <h2 style="margin-top:8px">Nutricionista</h2>
+      <span class="pill" style="background:var(--pri-gradient);color:#fff;font-weight:700;padding:5px 12px">EM BREVE</span>
+      <p class="mut" style="margin-top:14px;font-size:14px">Em breve você poderá receber um plano alimentar montado por um nutricionista e acompanhar tudo por aqui, junto com o seu treino.</p>
+    </div>`;
+}
+
+// ===== LGPD =====
+const LGPD_VERSAO = "1.0";
+const LGPD_TXT = `
+  <p>Este termo explica como o <b>Treinô</b> trata os seus dados pessoais, conforme a <b>Lei Geral de Proteção de Dados (Lei nº 13.709/2018 - LGPD)</b>.</p>
+  <h4>Quais dados coletamos</h4>
+  <ul><li>Identificação: nome e telefone.</li>
+  <li>Dados de saúde e corpo (dados sensíveis): peso, altura, idade, sexo, objetivo e fotos de evolução.</li>
+  <li>Dados de uso: treinos executados, cargas, alimentos registrados.</li></ul>
+  <h4>Para que usamos</h4>
+  <p>Somente para o acompanhamento do seu treino e da sua evolução pelo seu instrutor, para calcular suas metas e para o funcionamento do aplicativo. Não vendemos nem compartilhamos seus dados com terceiros para publicidade.</p>
+  <h4>Quem pode ver</h4>
+  <p>Apenas você e o seu instrutor responsável. As fotos e os dados de saúde só são usados para fins de acompanhamento.</p>
+  <h4>Como protegemos</h4>
+  <p>Os dados ficam armazenados na plataforma Google Firebase, com criptografia em trânsito e em repouso, login individual com senha e regras de acesso que impedem que um aluno veja os dados de outro.</p>
+  <h4>Seus direitos</h4>
+  <p>Você pode, a qualquer momento: confirmar que tratamos seus dados, acessá-los, corrigi-los, levá-los com você, pedir a exclusão e revogar este consentimento. Use os botões na aba <b>Perfil</b> ou fale com o seu instrutor.</p>
+  <h4>Por quanto tempo guardamos</h4>
+  <p>Enquanto você for aluno ativo ou até você pedir a exclusão.</p>
+  <h4>Consentimento</h4>
+  <p>Ao aceitar, você autoriza o tratamento dos dados acima, inclusive os dados sensíveis de saúde e as fotos, para as finalidades descritas.</p>`;
+
+function mostrarLGPD(soVer) {
+  if ($("lgpdm")) return;
+  const m = document.createElement("div");
+  m.className = "modal"; m.id = "lgpdm";
+  m.innerHTML = `<div class="box">
+    <h2 style="margin:0">🔒 Privacidade e proteção de dados</h2>
+    <div class="txt">${LGPD_TXT}</div>
+    ${soVer ? `<button class="btn" onclick="$('lgpdm').remove()">Fechar</button>` : `
+      <label class="chk"><input type="checkbox" id="lgpdok" onchange="$('lgpdbtn').disabled=!this.checked;$('lgpdbtn').style.opacity=this.checked?1:.5"> Li e aceito o tratamento dos meus dados, inclusive dados de saúde e fotos, conforme este termo.</label>
+      <button class="btn" id="lgpdbtn" disabled style="opacity:.5" onclick="aceitarLGPD()">Aceitar e continuar</button>
+      <button class="btn sec" onclick="sair();$('lgpdm').remove()">Não aceito (sair)</button>`}
+  </div>`;
+  document.body.appendChild(m);
+}
+
+async function aceitarLGPD() {
+  const lgpd = { aceito: true, ts: Date.now(), versao: LGPD_VERSAO };
+  try {
+    await db.doc("users/" + ME.id).update({ lgpd });
+    ME.lgpd = lgpd;
+    $("lgpdm").remove();
+    toast("Consentimento registrado. Obrigado!");
+    if (tab === "per") renderApp();
+  } catch (e) { console.log(e); toast("Não foi possível registrar. Verifique a internet."); }
+}
+
+function exportarDados() {
+  const perfil = { ...ME };
+  const d = {
+    exportadoEm: new Date().toISOString(), perfil,
+    treinoDoInstrutor: TR, treinoProprio: OWN, execucaoHoje: LOG, dietaHoje: DIET.itens,
+    fotos: (FOTOS || []).map(f => ({ data: f.data, peso: f.peso }))
+  };
+  const blob = new Blob([JSON.stringify(d, null, 2)], { type: "application/json" });
+  const a = document.createElement("a");
+  a.href = URL.createObjectURL(blob); a.download = "meus-dados-treino.json";
+  document.body.appendChild(a); a.click(); a.remove();
+  setTimeout(() => URL.revokeObjectURL(a.href), 2000);
+  toast("Arquivo com seus dados baixado.");
+}
+
+async function pedirExclusao() {
+  if (!confirm("Solicitar a exclusão dos seus dados? O seu instrutor será avisado e fará a exclusão. Esta ação encerra o seu acesso.")) return;
+  try {
+    await db.collection("lgpd_pedidos").add({ uid: ME.id, aluno: ME.nome || "", tipo: "exclusao", status: "pendente", ts: Date.now(), data: today() });
+    toast("Pedido enviado ao seu instrutor.");
+  } catch (e) { console.log(e); toast("Não foi possível enviar o pedido."); }
+}
+
+// ===== PERFIL =====
+function vPerfil() {
   $("v").innerHTML = `
     <div class="card">
       <h2>Meus Dados & Metas</h2>
-      <label>Peso Atual (kg)</label>
-      <input id="p-peso" type="number" step="0.1" value="${esc(ME.peso || "")}">
-
-      <label>Altura (cm)</label>
-      <input id="p-alt" type="number" value="${esc(ME.alt || "")}">
-
-      <label>Idade</label>
-      <input id="p-idade" type="number" value="${esc(ME.idade || "")}">
-
+      <label>Sexo</label>
+      <select id="p-sexo"><option value="m" ${(ME.sexo || "m") === "m" ? "selected" : ""}>Masculino</option><option value="f" ${ME.sexo === "f" ? "selected" : ""}>Feminino</option></select>
+      <label>Peso Atual (kg)</label><input id="p-peso" type="number" step="0.1" value="${esc(ME.peso || "")}">
+      <label>Altura (cm)</label><input id="p-alt" type="number" value="${esc(ME.alt || "")}">
+      <label>Idade</label><input id="p-idade" type="number" value="${esc(ME.idade || "")}">
       <label>Objetivo</label>
-      <select id="p-obj">
-        <option value="perder" ${ME.obj === 'perder' ? 'selected' : ''}>Perder Peso / Definir</option>
-        <option value="ganhar" ${ME.obj === 'ganhar' ? 'selected' : ''}>Ganhar Massa Muscular</option>
-      </select>
-
-      <label>Dias de treino por semana</label>
-      <input id="p-dias" type="number" value="${esc(ME.dias || "4")}">
-
+      <select id="p-obj"><option value="perder" ${ME.obj !== "ganhar" ? "selected" : ""}>Perder Peso / Definir</option><option value="ganhar" ${ME.obj === "ganhar" ? "selected" : ""}>Ganhar Massa Muscular</option></select>
+      <label>Dias de treino por semana</label><input id="p-dias" type="number" value="${esc(ME.dias || "4")}">
       <button class="btn" onclick="salvarPerfil()">Salvar Perfil</button>
-      <button class="btn" style="background:var(--card-bg); border:1px solid var(--card-border); margin-top:10px; box-shadow:none;" onclick="instalarAppPWA()">📲 Instalar App no Celular</button>
+      <button class="btn sec" onclick="instalarAppPWA()">📲 Instalar App no Celular</button>
     </div>
-  `;
+    <div class="card">
+      <h2>🔒 Privacidade e LGPD</h2>
+      <div class="mut">Seus dados são usados só para o acompanhamento do seu treino e ficam armazenados em ambiente protegido. Você pode consultar, levar ou apagar seus dados quando quiser.</div>
+      ${ME.lgpd && ME.lgpd.aceito ? `<div class="mut" style="margin-top:8px">✅ Consentimento registrado em ${dt(ME.lgpd.ts)}</div>` : ""}
+      <button class="btn sec" onclick="mostrarLGPD(true)">📄 Ver termo de privacidade</button>
+      <button class="btn sec" onclick="exportarDados()">⬇️ Baixar meus dados</button>
+      <button class="btn sec" style="color:var(--no)" onclick="pedirExclusao()">🗑️ Solicitar exclusão dos meus dados</button>
+    </div>`;
 }
 
 async function salvarPerfil() {
-  const peso = parseFloat($("p-peso").value);
-  const alt = parseInt($("p-alt").value);
-  const idade = parseInt($("p-idade").value);
-  const obj = $("p-obj").value;
-  const dias = parseInt($("p-dias").value) || 4;
-
+  const peso = parseFloat($("p-peso").value), alt = parseInt($("p-alt").value), idade = parseInt($("p-idade").value);
+  const obj = $("p-obj").value, sexo = $("p-sexo").value, dias = parseInt($("p-dias").value) || 4;
   if (!peso || !alt || !idade) return alert("Preencha todos os campos corretamente.");
-
   try {
-    await db.doc("users/" + ME.id).update({ peso, alt, idade, obj, dias });
-    ME.peso = peso; ME.alt = alt; ME.idade = idade; ME.obj = obj; ME.dias = dias;
-    alert("Perfil atualizado com sucesso!");
+    await db.doc("users/" + ME.id).update({ peso, alt, idade, obj, dias, sexo });
+    Object.assign(ME, { peso, alt, idade, obj, dias, sexo });
+    toast("Perfil atualizado com sucesso!");
     renderApp();
-  } catch (e) {
-    console.log(e);
-    alert("Não foi possível salvar o perfil.");
-  }
+  } catch (e) { console.log(e); alert("Não foi possível salvar o perfil."); }
 }
 
 function instalarAppPWA() {
-  if (window.matchMedia('(display-mode: standalone)').matches) {
-    return alert("O app já está instalado e aberto como aplicativo.");
-  }
-  if (deferredPrompt) {
-    deferredPrompt.prompt();
-    deferredPrompt.userChoice.then(() => { deferredPrompt = null; });
-  } else {
-    alert("Para instalar, toque nos 3 pontinhos do Chrome e escolha 'Instalar app' ou 'Adicionar à tela inicial'.");
-  }
+  if (window.matchMedia('(display-mode: standalone)').matches) return alert("O app já está instalado e aberto como aplicativo.");
+  if (deferredPrompt) { deferredPrompt.prompt(); deferredPrompt.userChoice.then(() => { deferredPrompt = null; }); }
+  else alert("Para instalar, toque nos 3 pontinhos do Chrome e escolha 'Instalar app' ou 'Adicionar à tela inicial'.");
 }
 </script>
 </body>
