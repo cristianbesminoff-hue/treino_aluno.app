@@ -184,6 +184,12 @@ if ('serviceWorker' in navigator) {
   navigator.serviceWorker.register('sw.js').catch(err => console.log('SW erro: ', err));
 }
 
+let deferredPrompt;
+window.addEventListener('beforeinstallprompt', (e) => {
+  e.preventDefault();
+  deferredPrompt = e;
+});
+
 const CFG = {
   apiKey: "AIzaSyCsidHGMxmF_OGqxZGeweUS6UCF_OViIvc",
   authDomain: "treino-app-787d7.firebaseapp.com",
@@ -349,13 +355,14 @@ function vPerfilAluno() {
       <label>Objetivo</label>
       <select id="p-obj">
         <option value="perder" ${ME.obj === 'perder' ? 'selected' : ''}>Perder Peso / Definir</option>
-        <option value="ganhar" ${ME.obj === 'ganhar' ? 'selected' : ''}>Ganhar Massa Muscular</option>
+        <option value="ganhar" ${ME.obj === 'ganhar' ? 'selected' : ''}>Ganha Massa Muscular</option>
       </select>
       
       <label>Dias de treino por semana</label>
       <input id="p-dias" type="number" value="${ME.dias || "4"}">
       
       <button class="btn" onclick="salvarPerfil()">Salvar Perfil</button>
+      <button class="btn" style="background:var(--card-bg); border:1px solid var(--card-border); margin-top:10px;" onclick="instalarAppPWA()">📲 Instalar App no Telemóvel</button>
     </div>
   `;
 }
@@ -378,6 +385,20 @@ async function salvarPerfil() {
   await db.doc("users/" + ME.id).update({ peso, alt, idade, obj, dias });
   alert("Perfil atualizado com sucesso!");
   renderApp();
+}
+
+function instalarAppPWA() {
+  if (deferredPrompt) {
+    deferredPrompt.prompt();
+    deferredPrompt.userChoice.then((choiceResult) => {
+      if (choiceResult.outcome === 'accepted') {
+        console.log('Utilizador aceitou instalar');
+      }
+      deferredPrompt = null;
+    });
+  } else {
+    alert("Para instalar, toca nos 3 pontos do Chrome e escolhe 'Adicionar ao ecrã principal' ou 'Instalar aplicação'.");
+  }
 }
 </script>
 </body>
