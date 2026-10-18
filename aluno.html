@@ -223,6 +223,20 @@ const FOODS = [
 ["Feijoada",150,9,10,8],["Strogonoff de frango",130,10,4,8]
 ];
 
+// ===== BIBLIOTECA DE EXERCICIOS DO INSTRUTOR =====
+const BIBLIOTECA_G = {
+  "Peito": "Supino Reto com Barra|Supino Reto com Halteres|Supino Inclinado com Barra|Supino Inclinado com Halteres|Supino Declinado com Barra|Supino Declinado com Halteres|Supino na Máquina Articulada|Crucifixo Reto com Halteres|Crucifixo Inclinado com Halteres|Crucifixo na Polia (Crossover Alto)|Crossover Médio na Polia|Crossover Baixo na Polia|Peck Deck / Voador|Flexão de Braço Tradicional|Flexão de Braço Inclinada|Paralelas para Peito (Chest Dips)|Pull-over com Halter",
+  "Costas": "Puxada Alta Frontal (Pegada Aberta)|Puxada Alta Supinada (Pegada Fechada)|Puxada Alta Neutra|Remada Curvada com Barra|Remada Curvada com Halteres|Remada Baixa na Polia (Triângulo)|Remada Unilateral com Halter (Serrote)|Remada Articulada|Remada T (Cavalo)|Pulldown na Polia Alta|Barra Fixa (Pronada)|Barra Fixa (Supinada)|Levantamento Terra|Crucifixo Invertido na Polia|Crucifixo Invertido com Halteres|Peck Deck Invertido|Puxada Articulada Unilateral",
+  "Quadríceps": "Agachamento Livre com Barra|Agachamento Guiado (Smith)|Agachamento Frontal|Leg Press 45°|Leg Press Horizontal|Cadeira Extensora|Agachamento Búlgaro com Halteres|Afundo com Halteres|Passada em Deslocamento|Agachamento Hack|Agachamento Sissy (Sissy Squat)|Subida no Banco (Step-up)",
+  "Posterior / Isquiotibiais": "Mesa Flexora|Cadeira Flexora|Stiff com Barra|Stiff com Halteres|Levantamento Terra Romeno (RDL)|Flexor Vertical Unilateral|Bom Dia (Good Morning)|Flexão de Pernas na Bola Suíça",
+  "Ombros": "Desenvolvimento com Barra Frontal|Desenvolvimento com Halteres|Desenvolvimento Arnold|Desenvolvimento na Máquina Articulada|Elevação Lateral com Halteres|Elevação Lateral na Polia|Elevação Lateral na Máquina|Elevação Frontal com Halteres|Elevação Frontal com Barra|Elevação Frontal na Polia|Elevação Frontal com Anilha|Remada Alta com Barra|Remada Alta na Polia|Encolhimento de Ombros com Barra|Encolhimento de Ombros com Halteres",
+  "Bíceps": "Rosca Direta com Barra Reta|Rosca Direta com Barra W|Rosca Alternada com Halteres|Rosca Martelo com Halteres|Rosca Martelo na Polia (Corda)|Rosca Concentrada com Halter|Rosca Scott com Barra W|Rosca Scott Unilateral com Halter|Rosca Scott na Máquina|Rosca Inclinada com Halteres|Rosca na Polia Alta (Duplo Bíceps)|Rosca Inversa com Barra",
+  "Tríceps": "Tríceps Pulley (Barra Reta)|Tríceps Pulley (Barra V)|Tríceps Corda na Polia|Tríceps Testa com Barra W|Tríceps Testa com Halteres|Tríceps Francês Unilateral com Halter|Tríceps Francês com Barra W|Tríceps Coice com Halter|Tríceps Coice na Polia|Tríceps nas Paralelas|Tríceps no Banco|Supino Fechado",
+  "Panturrilhas": "Gêmeos em Pé na Máquina|Gêmeos Sentado (Cavalinho)|Gêmeos no Leg Press 45°|Gêmeos em Pé Unilateral com Halter|Panturrilha no Agachamento Hack",
+  "Glúteos": "Elevação Pélvica com Barra|Elevação Pélvica na Máquina|Cadeira Abdutora|Glúteo na Polia (Extension/Kickback)|Glúteo Quatro Apoios|Agachamento Sumo com Halter|Afundo Búlgaro Focado em Glúteo",
+  "Core / Abdómen": "Abdominal Infra no Banco|Abdominal Infra na Paralela|Abdominal Supra Curto|Abdominal Supra na Polia|Abdominal Obliquo Deitado|Abdominal Obliquo na Polia|Prancha Isométrica|Prancha Lateral|Abdominal na Roda (Ab Roller)|Vacuum Abdominal"
+};
+
 // ===== LOGIN =====
 auth.onAuthStateChanged(async u => {
   if (!u) { renderLogin(); return; }
@@ -263,6 +277,7 @@ async function carregarTudo(u) {
     const k = String(n).toLowerCase().trim(); if (vistos.has(k)) return; vistos.add(k);
     lib.push({ n, g: x.g || x.grupo || "Geral", gif: x.gif || "" });
   };
+  Object.keys(BIBLIOTECA_G).forEach(g => BIBLIOTECA_G[g].split("|").forEach(n => add({ n, g })));
   const plan = (pS && pS.exists) ? pS.data() : {};
   Object.keys(plan).forEach(k => { if (Array.isArray(plan[k])) plan[k].forEach(add); });
   try { const q = await db.collection("exercicios").limit(600).get(); q.forEach(d => add(d.data())); } catch (e) {}
@@ -310,7 +325,7 @@ function irTab(t) { tab = t; renderApp(); window.scrollTo(0, 0); }
 // ===== LOG (execução) =====
 async function salvarLog() {
   try {
-    await db.doc("logs/" + ME.id + "_" + today()).set({ ...LOG, uid: ME.id, aluno: ME.nome || "", date: today(), ts: Date.now() });
+    await db.doc("logs/" + ME.id + "_" + today()).set({ ...LOG, uid: ME.id, instrutor: ME.instrutor || null, aluno: ME.nome || "", date: today(), ts: Date.now() });
   } catch (e) { console.log(e); toast("Não foi possível salvar. Verifique a internet."); }
 }
 
@@ -376,7 +391,7 @@ async function editCarga(t, i, val) {
     await salvarLog();
     if (num(val) > num(antes)) {
       await db.collection("alertas").add({
-        uid: ME.id, aluno: ME.nome || "", tipo: "carga", treino: t, exercicio: e.n,
+        uid: ME.id, instrutor: ME.instrutor || null, aluno: ME.nome || "", tipo: "carga", treino: t, exercicio: e.n,
         de: antes, para: val, ts: Date.now(), data: today(), lido: false
       });
       toast("Carga atualizada. Seu instrutor foi avisado do aumento.");
@@ -576,7 +591,7 @@ function atualizarCalc() {
 }
 
 async function saveDiet() {
-  try { await db.doc("dietas/" + ME.id + "_" + today()).set({ uid: ME.id, aluno: ME.nome || "", date: today(), itens: DIET.itens, ts: Date.now() }); }
+  try { await db.doc("dietas/" + ME.id + "_" + today()).set({ uid: ME.id, instrutor: ME.instrutor || null, aluno: ME.nome || "", date: today(), itens: DIET.itens, ts: Date.now() }); }
   catch (e) { console.log(e); toast("Não foi possível salvar a refeição."); }
 }
 async function addAlim() {
@@ -664,7 +679,7 @@ async function enviarFoto(inp) {
     const img = await redimensionar(file);
     const peso = num($("fpeso").value) || null;
     const ts = Date.now();
-    const doc = { uid: ME.id, aluno: ME.nome || "", ts, data: today(), peso, img };
+    const doc = { uid: ME.id, instrutor: ME.instrutor || null, aluno: ME.nome || "", ts, data: today(), peso, img };
     const ref = await db.collection("fotos").add(doc);
     FOTOS.push({ id: ref.id, ...doc });
     toast("Foto enviada! ✅");
@@ -748,7 +763,7 @@ function exportarDados() {
 async function pedirExclusao() {
   if (!confirm("Solicitar a exclusão dos seus dados? O seu instrutor será avisado e fará a exclusão. Esta ação encerra o seu acesso.")) return;
   try {
-    await db.collection("lgpd_pedidos").add({ uid: ME.id, aluno: ME.nome || "", tipo: "exclusao", status: "pendente", ts: Date.now(), data: today() });
+    await db.collection("lgpd_pedidos").add({ uid: ME.id, instrutor: ME.instrutor || null, aluno: ME.nome || "", tipo: "exclusao", status: "pendente", ts: Date.now(), data: today() });
     toast("Pedido enviado ao seu instrutor.");
   } catch (e) { console.log(e); toast("Não foi possível enviar o pedido."); }
 }
