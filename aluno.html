@@ -354,6 +354,7 @@ function vTreino() {
           <div style="margin-top:8px;display:flex;gap:8px;align-items:center">
             <span class="mut" style="white-space:nowrap">Carga:</span>
             <input type="text" placeholder="ex: 20kg" value="${esc(e.carga || "")}" onchange="editCarga('${t}',${i},this.value)" style="padding:8px 10px;font-size:14px">
+            <button class="btn sm sec" style="flex:none;white-space:nowrap" onclick="verAnimTr('${t}',${i})">▶ Como fazer</button>
           </div>
         </div>`;
       }).join("") : `<div class="mut">Seu instrutor ainda não cadastrou exercícios no treino ${esc(t)} para você. Você pode montar o seu próprio na aba <b>Montar</b>.</div>`}
@@ -416,6 +417,7 @@ function vMontar() {
             <input type="number" inputmode="numeric" value="${esc(e.s)}" placeholder="Séries" onchange="editOwn(${i},'s',this.value)" style="padding:8px 10px;font-size:14px">
             <input type="number" inputmode="numeric" value="${esc(e.r)}" placeholder="Reps" onchange="editOwn(${i},'r',this.value)" style="padding:8px 10px;font-size:14px">
             <input type="text" value="${esc(e.carga || "")}" placeholder="Carga" onchange="editOwn(${i},'carga',this.value)" style="padding:8px 10px;font-size:14px">
+            <button class="btn sm sec" style="flex:none" onclick="verAnimOwn(${i})">▶</button>
             <button class="btn sm sec" style="flex:none" onclick="delOwn(${i})">🗑️</button>
           </div>
         </div>`;
@@ -437,7 +439,7 @@ function filtrarLib() {
   LIBF = LIB.filter(x => (!g || x.g === g) && (!q || x.n.toLowerCase().includes(q))).slice(0, 40);
   $("libres").innerHTML = LIBF.length ? LIBF.map((x, i) => `
     <div class="item"><div><b>${esc(x.n)}</b><div class="mut">${esc(x.g)}</div></div>
-    <button class="btn sm" onclick="addOwn(${i})">+ Add</button></div>`).join("") : '<div class="mut">Nenhum exercício encontrado.</div>';
+    <div style="display:flex;gap:6px"><button class="btn sm sec" onclick="verAnimLib(${i})">▶</button><button class="btn sm" onclick="addOwn(${i})">+ Add</button></div></div>`).join("") : '<div class="mut">Nenhum exercício encontrado.</div>';
 }
 
 async function saveOwn() {
@@ -767,6 +769,175 @@ async function pedirExclusao() {
     toast("Pedido enviado ao seu instrutor.");
   } catch (e) { console.log(e); toast("Não foi possível enviar o pedido."); }
 }
+
+// ===== ANIMACAO DOS EXERCICIOS (boneco de tracos) =====
+const ANIM_L = { t: 52, u: 30, f: 28, th: 40, sh: 40 };
+const ANIM_DEF = { t: 0, u: 0, f: 0, th: 0, sh: 0, th2: null, sh2: null, so: 0, ax: 110, ay: 161, hx: null, hy: null };
+const ANIM_PAT = {
+  curl:     { A: { u: 5, f: 5 }, B: { u: 12, f: 150 } },
+  press:    { A: { u: 75, f: 180 }, B: { u: 178, f: 180 } },
+  raise:    { A: { u: 4, f: 6 }, B: { u: 90, f: 95 } },
+  upright:  { A: { u: 2, f: 2 }, B: { u: 75, f: 120 } },
+  shrug:    { A: { u: 0, f: 0, so: 0 }, B: { u: 0, f: 0, so: 9 } },
+  triceps:  { A: { u: 8, f: 150 }, B: { u: 8, f: 6 }, deco: [{ k: "cable", dx: 15 }] },
+  pulldown: { base: { hx: 100, hy: 120, th: 90, sh: 0, t: -5 }, A: { u: 178, f: 178 }, B: { u: 15, f: 165 }, deco: [{ k: "line", x1: 70, y1: 127, x2: 125, y2: 127 }, { k: "cable", dx: 0 }] },
+  pullup:   { base: { hx: 110, t: 0, th: 45, sh: -45 }, A: { hy: 102, u: 180, f: 180 }, B: { hy: 44, u: -15, f: 175 }, deco: [{ k: "line", x1: 70, y1: -10, x2: 150, y2: -10 }], w: false },
+  row:      { base: { t: 62, th: 14, sh: -12 }, A: { u: 2, f: 2 }, B: { u: -95, f: -15 } },
+  bench:    { base: { hx: 150, hy: 112, t: -90, th: 100, sh: 12 }, A: { u: 55, f: 180 }, B: { u: 180, f: 180 }, deco: [{ k: "line", x1: 50, y1: 124, x2: 180, y2: 124 }] },
+  fly:      { base: { hx: 150, hy: 112, t: -90, th: 100, sh: 12 }, A: { u: 30, f: 35 }, B: { u: 180, f: 180 }, deco: [{ k: "line", x1: 50, y1: 124, x2: 180, y2: 124 }] },
+  skull:    { base: { hx: 150, hy: 112, t: -90, th: 100, sh: 12, u: 180 }, A: { f: -100 }, B: { f: 180 }, deco: [{ k: "line", x1: 50, y1: 124, x2: 180, y2: 124 }] },
+  pushup:   { base: { hx: 120 }, A: { hy: 125, t: -64, th: 64, sh: 64, u: 0, f: 0 }, B: { hy: 145, t: -79, th: 79, sh: 79, u: -60, f: 60 }, w: false },
+  plank:    { base: { hx: 120, t: -75.5, th: 75.5, sh: 75.5, u: 0, f: 90 }, A: { hy: 140 }, B: { hy: 142 }, w: false },
+  squat:    { A: { t: 0, th: 0, sh: 0, u: 90, f: 90 }, B: { t: 35, th: 95, sh: -25, u: 90, f: 90 } },
+  lunge:    { base: { ax: 140, u: 0, f: 0 }, A: { t: 3, th: 15, sh: -10, th2: -25, sh2: -35 }, B: { t: 5, th: 75, sh: -15, th2: -35, sh2: -85 } },
+  hinge:    { A: { t: 0, th: 0, sh: 0, u: 0, f: 0 }, B: { t: 70, th: 25, sh: -20, u: 0, f: 0 } },
+  calf:     { base: { u: 0, f: 0 }, A: { ay: 161 }, B: { ay: 149 } },
+  crunch:   { base: { hx: 120, hy: 150, th: 130, sh: 20 }, A: { t: -90, u: 130, f: 130 }, B: { t: -58, u: 120, f: 120 }, w: false },
+  legraise: { base: { hx: 100, hy: 150, t: -90, u: 92, f: 92 }, A: { th: 92, sh: 92 }, B: { th: 170, sh: 172 }, w: false },
+  bridge:   { A: { hx: 115, hy: 146, t: -60, th: 122, sh: 24, u: 30, f: 45 }, B: { hx: 122, hy: 118, t: -90, th: 85, sh: 5, u: 30, f: 45 }, deco: [{ k: "line", x1: 35, y1: 124, x2: 95, y2: 124 }], w: false },
+  legext:   { base: { hx: 90, hy: 112, t: -8, th: 90, u: 40, f: 40 }, A: { sh: 0 }, B: { sh: 85 }, deco: [{ k: "line", x1: 55, y1: 120, x2: 105, y2: 120 }], w: false },
+  legpress: { base: { hx: 100, hy: 128, t: -52, u: 60, f: 75 }, A: { th: 150, sh: 55 }, B: { th: 122, sh: 120 }, w: false },
+  legcurl:  { base: { hx: 105, hy: 85, t: 0, u: 20, f: 20, th: 0, th2: 0, sh2: 0 }, A: { sh: 0 }, B: { sh: -115 }, w: false }
+};
+const ANIM_DICAS = {
+  curl: "Cotovelos colados ao corpo. Suba flexionando o cotovelo e desça devagar, sem balançar.",
+  press: "Empurre acima da cabeça sem arquear as costas e volte controlando a descida.",
+  raise: "Eleve os braços até a altura dos ombros, com o corpo parado e o movimento controlado.",
+  upright: "Puxe os cotovelos para cima, mantendo a carga perto do corpo, até a altura do peito.",
+  shrug: "Suba os ombros em direção às orelhas, segure um instante e desça devagar.",
+  triceps: "Cotovelos fixos ao lado do corpo. Estenda totalmente os braços e volte controlando.",
+  pulldown: "Puxe a barra em direção ao peito, aproximando as escápulas, e volte devagar.",
+  pullup: "Puxe o corpo até o queixo passar da barra e desça com controle, sem balançar.",
+  row: "Costas retas e tronco inclinado. Leve os cotovelos para trás e aperte as costas.",
+  bench: "Desça a carga até a linha do peito e empurre para cima, sem tirar o quadril do banco.",
+  fly: "Abra os braços com leve flexão no cotovelo e feche como num abraço, sentindo o peito.",
+  skull: "Cotovelos apontados para cima e parados. Flexione e estenda só o antebraço.",
+  pushup: "Corpo em linha reta. Desça o peito perto do chão e empurre de volta.",
+  plank: "Corpo reto da cabeça aos pés, abdômen firme. Respire e mantenha a posição.",
+  squat: "Joelhos acompanham a ponta dos pés, coluna firme. Desça até onde conseguir e suba empurrando o chão.",
+  lunge: "Passo firme, tronco ereto. Desça com controle até o joelho de trás quase tocar o chão.",
+  hinge: "Empurre o quadril para trás com a coluna reta e a carga rente às pernas. Suba contraindo glúteos.",
+  calf: "Suba na ponta dos pés o máximo que puder, segure um instante e desça alongando.",
+  crunch: "Lombar apoiada. Eleve os ombros contraindo o abdômen, sem puxar o pescoço.",
+  legraise: "Eleve as pernas com o abdômen firme e desça devagar, sem arquear a lombar.",
+  bridge: "Suba o quadril contraindo os glúteos no topo e desça com controle.",
+  legext: "Estenda os joelhos até quase travar, segure um instante e volte devagar.",
+  legpress: "Empurre a plataforma sem travar os joelhos e volte controlando, sem descolar o quadril.",
+  legcurl: "Flexione o joelho levando o calcanhar em direção ao glúteo e volte devagar."
+};
+
+function animPadrao(nome, grupo) {
+  const n = String(nome || "").normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase();
+  const g = String(grupo || "").normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase();
+  const has = re => re.test(n);
+  if (has(/bulgaro|afundo|passada|step-up|subida no banco/)) return "lunge";
+  if (has(/agachamento/)) return "squat";
+  if (has(/leg press/)) return "legpress";
+  if (has(/extensora/)) return "legext";
+  if (has(/flexora|flexao de pernas|flexor vertical/)) return "legcurl";
+  if (has(/terra|stiff|bom dia/)) return "hinge";
+  if (has(/elevacao pelvica/)) return "bridge";
+  if (has(/supino/)) return "bench";
+  if (has(/invertido/)) return "row";
+  if (has(/crucifixo|crossover|peck|voador|pull-over|pullover/)) return "fly";
+  if (has(/flexao de braco|paralelas/)) return "pushup";
+  if (has(/barra fixa/)) return "pullup";
+  if (has(/puxada|pulldown/)) return "pulldown";
+  if (has(/remada alta/)) return "upright";
+  if (has(/remada/)) return "row";
+  if (has(/desenvolvimento/)) return "press";
+  if (has(/elevacao lateral|elevacao frontal/)) return "raise";
+  if (has(/encolhimento/)) return "shrug";
+  if (has(/rosca/)) return "curl";
+  if (has(/testa|frances/)) return "skull";
+  if (has(/triceps/)) return "triceps";
+  if (has(/gemeos|panturrilha/)) return "calf";
+  if (has(/infra/)) return "legraise";
+  if (has(/prancha|roda/)) return "plank";
+  if (has(/abdominal|vacuum/)) return "crunch";
+  if (has(/gluteo|abdutora|sumo/)) return "bridge";
+  const porGrupo = [["peito", "bench"], ["costas", "row"], ["quadriceps", "squat"], ["posterior", "hinge"], ["ombro", "press"], ["biceps", "curl"], ["triceps", "triceps"], ["panturrilha", "calf"], ["gluteo", "bridge"], ["core", "crunch"]];
+  for (const [k, v] of porGrupo) if (g.includes(k)) return v;
+  return "press";
+}
+
+function animPose(pk, e) {
+  const P = ANIM_PAT[pk], mix = (a, b) => (typeof a === "number" && typeof b === "number") ? a + (b - a) * e : (b !== undefined ? b : a);
+  const A = { ...ANIM_DEF, ...(P.base || {}), ...P.A }, B = { ...ANIM_DEF, ...(P.base || {}), ...P.B };
+  const o = {};
+  Object.keys(ANIM_DEF).forEach(k => { o[k] = (A[k] === null || B[k] === null) ? (A[k] !== null ? A[k] : B[k]) : mix(A[k], B[k]); });
+  return o;
+}
+
+function animSkel(p) {
+  const L = ANIM_L, r = d => d * Math.PI / 180, sx = d => Math.sin(r(d)), cy = d => Math.cos(r(d));
+  let K, A, H;
+  if (p.hx == null) {
+    A = [p.ax, p.ay]; K = [A[0] - L.sh * sx(p.sh), A[1] - L.sh * cy(p.sh)]; H = [K[0] - L.th * sx(p.th), K[1] - L.th * cy(p.th)];
+  } else {
+    H = [p.hx, p.hy]; K = [H[0] + L.th * sx(p.th), H[1] + L.th * cy(p.th)]; A = [K[0] + L.sh * sx(p.sh), K[1] + L.sh * cy(p.sh)];
+  }
+  const S = [H[0] + L.t * sx(p.t), H[1] - L.t * cy(p.t) - p.so];
+  const C = [S[0] + 17 * sx(p.t), S[1] - 17 * cy(p.t)];
+  const E = [S[0] + L.u * sx(p.u), S[1] + L.u * cy(p.u)];
+  const W = [E[0] + L.f * sx(p.f), E[1] + L.f * cy(p.f)];
+  let K2 = null, A2 = null;
+  if (p.th2 != null) { K2 = [H[0] + L.th * sx(p.th2), H[1] + L.th * cy(p.th2)]; A2 = [K2[0] + L.sh * sx(p.sh2), K2[1] + L.sh * cy(p.sh2)]; }
+  return { H, K, A, S, C, E, W, K2, A2, toe: p.hx == null && p.ay < 158 };
+}
+
+function animSvg(pk, e) {
+  const P = ANIM_PAT[pk], s = animSkel(animPose(pk, e)), f = n => Math.round(n * 10) / 10;
+  const ln = (a, b, c, w) => `<line x1="${f(a[0])}" y1="${f(a[1])}" x2="${f(b[0])}" y2="${f(b[1])}" stroke="${c}" stroke-width="${w}" stroke-linecap="round"/>`;
+  let o = `<line x1="10" y1="166" x2="210" y2="166" stroke="#475569" stroke-width="2" stroke-linecap="round"/>`;
+  (P.deco || []).forEach(d => {
+    if (d.k === "line") o += `<line x1="${d.x1}" y1="${d.y1}" x2="${d.x2}" y2="${d.y2}" stroke="#64748b" stroke-width="6" stroke-linecap="round"/>`;
+    if (d.k === "cable") o += ln([s.S[0] + d.dx, 4], s.W, "#64748b", 2);
+  });
+  const foot = (a) => ln(a, [a[0] + 12, s.toe ? 164 : a[1] + 2], "#cbd5e1", 6);
+  if (s.K2) o += ln(s.H, s.K2, "#64748b", 7) + ln(s.K2, s.A2, "#64748b", 7) + foot(s.A2);
+  o += ln(s.H, s.K, "#e2e8f0", 8) + ln(s.K, s.A, "#e2e8f0", 8) + foot(s.A);
+  o += ln(s.H, s.S, "#f8fafc", 10);
+  o += `<circle cx="${f(s.C[0])}" cy="${f(s.C[1])}" r="9" fill="#f8fafc"/>`;
+  o += ln(s.S, s.E, "#ff9a5c", 7) + ln(s.E, s.W, "#ff9a5c", 6);
+  if (P.w !== false) o += `<circle cx="${f(s.W[0])}" cy="${f(s.W[1])}" r="6" fill="#ff6a1a"/>`;
+  return o;
+}
+
+let animRaf = 0;
+function animLoop(pk, t0) {
+  const svg = document.getElementById("animsvg");
+  if (!svg) { animRaf = 0; return; }
+  const t = ((performance.now() - t0) / 1300) % 2, ph = t < 1 ? t : 2 - t;
+  const x = Math.min(1, Math.max(0, (ph - 0.08) / 0.84));
+  svg.innerHTML = animSvg(pk, (1 - Math.cos(Math.PI * x)) / 2);
+  animRaf = requestAnimationFrame(() => animLoop(pk, t0));
+}
+
+function verAnim(nome, grupo, gif) {
+  fecharAnim();
+  const pk = animPadrao(nome, grupo);
+  const m = document.createElement("div");
+  m.className = "modal"; m.id = "animm";
+  m.onclick = ev => { if (ev.target === m) fecharAnim(); };
+  m.innerHTML = `<div class="box">
+    <h2 style="margin:0 0 2px">${esc(nome)}</h2><div class="mut">${esc(grupo || "")}</div>
+    <svg id="animsvg" viewBox="0 -36 220 216" style="width:100%;max-height:48vh;background:rgba(255,255,255,.04);border-radius:16px;margin:10px 0"></svg>
+    <div style="font-size:14px;color:#e2e8f0">💡 ${esc(ANIM_DICAS[pk] || "")}</div>
+    <div class="mut" style="font-size:11px;margin-top:8px">Animação ilustrativa do movimento. Em caso de dúvida, fale com seu instrutor.</div>
+    ${gif ? `<a class="btn sec" style="display:block;text-align:center;text-decoration:none" href="${esc(gif)}" target="_blank" rel="noopener">🎞 Ver GIF do instrutor</a>` : ""}
+    <button class="btn" onclick="fecharAnim()">Fechar</button></div>`;
+  document.body.appendChild(m);
+  animLoop(pk, performance.now());
+}
+function fecharAnim() {
+  if (animRaf) cancelAnimationFrame(animRaf);
+  animRaf = 0;
+  const m = document.getElementById("animm"); if (m) m.remove();
+}
+function verAnimTr(t, i) { const e = TR[t][i]; verAnim(e.n, e.g, e.gif); }
+function verAnimOwn(i) { const e = OWN[i]; verAnim(e.n, e.g, e.gif); }
+function verAnimLib(i) { const e = LIBF[i]; if (e) verAnim(e.n, e.g, e.gif); }
 
 // ===== PERFIL =====
 function vPerfil() {
